@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARCADE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'Press Start 2P', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(180deg, #ff0, #f80);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: none;
+        }
+        .subtitle {
+            font-size: 0.6rem;
+            color: #888;
+            margin-bottom: 3rem;
+            letter-spacing: 0.2em;
+        }
+        .games {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            justify-content: center;
+        }
+        .game-card {
+            border: 2px solid #333;
+            padding: 2rem 2.5rem;
+            text-align: center;
+            text-decoration: none;
+            color: #fff;
+            transition: border-color 0.2s, transform 0.2s;
+            min-width: 200px;
+        }
+        .game-card:hover {
+            border-color: #ff0;
+            transform: scale(1.05);
+        }
+        .game-card .title {
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+        }
+        .game-card .desc {
+            font-size: 0.5rem;
+            color: #aaa;
+            line-height: 1.8;
+        }
+        .footer {
+            margin-top: 3rem;
+            font-size: 0.4rem;
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+    <h1>ARCADE</h1>
+    <p class="subtitle">SELECT A GAME</p>
+    <div class="games">
+        <a href="galaga/" class="game-card">
+            <div class="title">GALAGA</div>
+            <div class="desc">DEFEND EARTH FROM<br>ALIEN INVADERS</div>
+        </a>
+    </div>
+    <p class="footer">INSERT COIN TO CONTINUE</p>
+</body>
+</html>
