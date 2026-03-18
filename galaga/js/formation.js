@@ -6,19 +6,31 @@ import { createAlien, getAlienType, startDive, updateAlien } from './alien.js';
 
 // Pixel letter definitions — each is an array of [col, row] positions
 const LETTERS = {
-    O: [[1,0],[2,0], [0,1],[3,1], [0,2],[3,2], [0,3],[3,3], [1,4],[2,4]],
-    L: [[0,0], [0,1], [0,2], [0,3], [0,4],[1,4],[2,4]],
-    I: [[0,0],[1,0],[2,0], [1,1], [1,2], [1,3], [0,4],[1,4],[2,4]],
+    A: [[1,0],[2,0], [0,1],[3,1], [0,2],[1,2],[2,2],[3,2], [0,3],[3,3], [0,4],[3,4]],
+    D: [[0,0],[1,0],[2,0], [0,1],[3,1], [0,2],[3,2], [0,3],[3,3], [0,4],[1,4],[2,4]],
     E: [[0,0],[1,0],[2,0], [0,1], [0,2],[1,2], [0,3], [0,4],[1,4],[2,4]],
+    H: [[0,0],[3,0], [0,1],[3,1], [0,2],[1,2],[2,2],[3,2], [0,3],[3,3], [0,4],[3,4]],
+    I: [[0,0],[1,0],[2,0], [1,1], [1,2], [1,3], [0,4],[1,4],[2,4]],
+    K: [[0,0],[2,0], [0,1],[1,1], [0,2], [0,3],[1,3], [0,4],[2,4]],
+    L: [[0,0], [0,1], [0,2], [0,3], [0,4],[1,4],[2,4]],
+    M: [[0,0],[4,0], [0,1],[1,1],[3,1],[4,1], [0,2],[2,2],[4,2], [0,3],[4,3], [0,4],[4,4]],
+    N: [[0,0],[3,0], [0,1],[1,1],[3,1], [0,2],[2,2],[3,2], [0,3],[3,3], [0,4],[3,4]],
+    O: [[1,0],[2,0], [0,1],[3,1], [0,2],[3,2], [0,3],[3,3], [1,4],[2,4]],
+    S: [[1,0],[2,0],[3,0], [0,1], [1,2],[2,2], [3,3], [0,4],[1,4],[2,4]],
     T: [[0,0],[1,0],[2,0],[3,0],[4,0], [2,1], [2,2], [2,3], [2,4]],
-    H: [[0,0],[3,0], [0,1],[3,1], [0,2],[1,2],[2,2],[3,2], [0,3],[3,3], [0,4],[3,4]]
+    U: [[0,0],[3,0], [0,1],[3,1], [0,2],[3,2], [0,3],[3,3], [1,4],[2,4]],
+    W: [[0,0],[4,0], [0,1],[4,1], [0,2],[2,2],[4,2], [0,3],[1,3],[3,3],[4,3], [1,4],[3,4]],
+    Y: [[0,0],[2,0], [0,1],[2,1], [1,2], [1,3], [1,4]]
 };
 
 // Width of each letter (rightmost column + 1)
-const LETTER_WIDTHS = { O: 4, L: 3, I: 3, E: 3, T: 5, H: 4 };
+const LETTER_WIDTHS = {
+    A: 4, D: 4, E: 3, H: 4, I: 3, K: 3, L: 3, M: 5,
+    N: 4, O: 4, S: 4, T: 5, U: 4, W: 5, Y: 3
+};
 
 // Alien type per letter position in word (cycles for color variety)
-const LETTER_TYPES = ['commander', 'butterfly', 'bee', 'commander', 'butterfly'];
+const LETTER_TYPES = ['commander', 'butterfly', 'bee', 'commander', 'butterfly', 'bee', 'commander'];
 
 function createNameFormation(word, wave) {
     const letters = word.split('');
@@ -31,8 +43,9 @@ function createNameFormation(word, wave) {
         if (i < letters.length - 1) totalWidth += gap;
     }
 
-    // Center horizontally: 18px per grid unit
-    const cellSize = 18;
+    // Auto-scale cell size to fit within 440px
+    const cellSize = Math.min(18, Math.floor(440 / totalWidth));
+    const vertSpacing = Math.min(22, cellSize + 4);
     const startX = (480 - totalWidth * cellSize) / 2;
     const startY = 70;
 
@@ -46,9 +59,8 @@ function createNameFormation(word, wave) {
 
         for (const [c, r] of positions) {
             const alien = createAlien(0, 0, type);
-            // Override position — these are pixel-positioned, not grid-based
             alien.baseX = startX + (cursorX + c) * cellSize;
-            alien.baseY = startY + r * 22;
+            alien.baseY = startY + r * vertSpacing;
             alien.noAnim = true;
             alien.noDive = true;
             alien.fireScale = Math.min(wave * 0.1, 1);
@@ -75,10 +87,12 @@ function createNameFormation(word, wave) {
 }
 
 export function createFormation(wave) {
-    // Wave 3: spell OLLIE
+    // Name waves
     if (wave === 3) return createNameFormation('OLLIE', wave);
-    // Wave 4: spell THEO
     if (wave === 4) return createNameFormation('THEO', wave);
+    if (wave === 5) return createNameFormation('MATTHEW', wave);
+    if (wave === 6) return createNameFormation('HUDSON', wave);
+    if (wave === 7) return createNameFormation('KENNEDY', wave);
 
     // Fire rate scales up: wave 1=10%, wave 5=50%, wave 10+=100%
     const fireScale = Math.min(wave * 0.1, 1);
