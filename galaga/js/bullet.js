@@ -13,6 +13,19 @@ export function createPlayerBullet(x, y) {
     };
 }
 
+export function createMissile(x, y) {
+    return {
+        x,
+        y,
+        width: 12,
+        height: 20,
+        speed: 5,
+        isPlayer: true,
+        isMissile: true,
+        killsLeft: 10
+    };
+}
+
 export function createAlienBullet(x, y) {
     return {
         x,
@@ -41,7 +54,22 @@ export function updateBullets(bullets) {
 
 export function drawBullets(ctx, bullets) {
     for (const b of bullets) {
-        if (b.isPlayer) {
+        if (b.isMissile) {
+            // Big red missile with orange glow
+            ctx.fillStyle = '#ff2200';
+            ctx.fillRect(b.x - b.width / 2, b.y - b.height / 2, b.width, b.height);
+            // Pointed tip
+            ctx.fillStyle = '#ffff00';
+            ctx.fillRect(b.x - 3, b.y - b.height / 2 - 4, 6, 4);
+            // Engine flame
+            ctx.fillStyle = '#ff6600';
+            ctx.fillRect(b.x - 4, b.y + b.height / 2, 8, 6 + Math.random() * 4);
+            ctx.fillStyle = '#ffff00';
+            ctx.fillRect(b.x - 2, b.y + b.height / 2, 4, 4 + Math.random() * 3);
+            // Glow
+            ctx.fillStyle = 'rgba(255, 100, 0, 0.3)';
+            ctx.fillRect(b.x - b.width, b.y - b.height, b.width * 2, b.height * 2);
+        } else if (b.isPlayer) {
             ctx.fillStyle = COLORS.PLAYER_BULLET;
             ctx.fillRect(b.x - b.width / 2, b.y - b.height / 2, b.width, b.height);
             // Glow

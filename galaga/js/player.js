@@ -1,8 +1,8 @@
 import { GAME_WIDTH, GAME_HEIGHT, PLAYER_SPEED, PLAYER_WIDTH, PLAYER_HEIGHT,
          PLAYER_Y_OFFSET, FIRE_COOLDOWN, MAX_PLAYER_BULLETS, MAX_LIVES } from './constants.js';
-import { isHeld, isFreeMovementActive } from './input.js';
+import { isHeld, isFreeMovementActive, consumeMissile } from './input.js';
 import { drawSprite, PLAYER_SPRITE } from './sprites.js';
-import { createPlayerBullet } from './bullet.js';
+import { createPlayerBullet, createMissile } from './bullet.js';
 
 export function createPlayer() {
     return {
@@ -56,6 +56,12 @@ export function updatePlayer(player, bullets) {
     // Blink timer (invincibility after respawn)
     if (player.blinkTimer > 0) {
         player.blinkTimer--;
+    }
+
+    // Check for missile cheat
+    if (consumeMissile()) {
+        bullets.push(createMissile(player.x, player.y - player.height / 2));
+        return true;
     }
 
     // Shoot

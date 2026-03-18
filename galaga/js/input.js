@@ -4,9 +4,11 @@ const justPressed = {};
 // Secret cheat codes
 // "123" = 10x bullet speed
 // "67"  = free movement (up/down/left/right)
+// "99"  = fire a missile that destroys 10 aliens
 let cheatBuffer = '';
 let cheatActive = false;
 let freeMovementActive = false;
+let missileReady = false;
 
 // Touch state
 const activeTouches = {};
@@ -33,6 +35,10 @@ export function initInput() {
             }
             if (cheatBuffer.endsWith('67')) {
                 freeMovementActive = !freeMovementActive;
+                cheatBuffer = '';
+            }
+            if (cheatBuffer.endsWith('99')) {
+                missileReady = true;
                 cheatBuffer = '';
             }
         }
@@ -114,4 +120,12 @@ export function isCheatActive() {
 
 export function isFreeMovementActive() {
     return freeMovementActive;
+}
+
+export function consumeMissile() {
+    if (missileReady) {
+        missileReady = false;
+        return true;
+    }
+    return false;
 }

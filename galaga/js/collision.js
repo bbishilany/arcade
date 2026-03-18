@@ -22,9 +22,21 @@ export function processCollisions(player, formation, bullets, callbacks) {
 
             if (checkCollision(bullet, alien)) {
                 alien.alive = false;
-                bullets.splice(bi, 1);
                 onAlienHit(alien);
-                break;
+
+                if (bullet.isMissile) {
+                    // Missile plows through — decrement kills left
+                    bullet.killsLeft--;
+                    if (bullet.killsLeft <= 0) {
+                        bullets.splice(bi, 1);
+                        break;
+                    }
+                    // Keep going — don't break, check next alien
+                } else {
+                    // Normal bullet dies on hit
+                    bullets.splice(bi, 1);
+                    break;
+                }
             }
         }
     }
