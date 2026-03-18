@@ -26,9 +26,9 @@ export const ALIEN_SPACING_X = 36;
 export const ALIEN_SPACING_Y = 32;
 export const FORMATION_TOP = 60;
 export const FORMATION_LEFT = 48;
-export const FORMATION_BASE_SPEED = 0.2;
-export const FORMATION_SPEED_INCREMENT = 0.05;
-export const FORMATION_SWEEP_RANGE = 15;
+export const FORMATION_BASE_SPEED = 0.3;
+export const FORMATION_SPEED_INCREMENT = 0.08;
+export const FORMATION_SWEEP_RANGE = 20;
 
 // Alien types
 export const ALIEN_TYPES = {
@@ -38,11 +38,11 @@ export const ALIEN_TYPES = {
 };
 
 // Dive behavior
-export const BASE_DIVE_CHANCE = 0.002;
-export const DIVE_CHANCE_INCREMENT = 0.0005;
+export const BASE_DIVE_CHANCE = 0.004;
+export const DIVE_CHANCE_INCREMENT = 0.001;
 export const DIVE_SPEED = 3;
-export const MAX_DIVERS_BASE = 2;
-export const ALIEN_FIRE_CHANCE = 0.015; // per-diver per-frame
+export const MAX_DIVERS_BASE = 3;
+export const ALIEN_FIRE_CHANCE = 0.012; // per-diver per-frame
 
 // Particles
 export const PARTICLE_COUNT = 12;
