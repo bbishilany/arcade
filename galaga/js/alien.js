@@ -94,7 +94,7 @@ export function updateAlien(alien, bullets, playerX) {
 export function drawAlien(ctx, alien, frameCount) {
     if (!alien.alive) return;
 
-    const animFrame = Math.floor(frameCount / 60) % 2;
+    const animFrame = alien.noAnim ? 0 : Math.floor(frameCount / 60) % 2;
     const sprite = getAlienSprite(alien.type, animFrame);
     drawSprite(ctx, sprite, alien.x, alien.y, 2);
 }

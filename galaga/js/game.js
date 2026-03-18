@@ -12,7 +12,7 @@ import { spawnExplosion, updateParticles, drawParticles, clearParticles } from '
 import { initAudio, playShoot, playExplosion, playPlayerDeath,
          playWaveComplete, playGameOver, playStartGame } from './audio.js';
 import { drawHUD } from './hud.js';
-import { drawTitleScreen, drawWaveIntro, drawGameOver, drawNameEntry } from './screens.js';
+import { drawTitleScreen, drawWaveIntro, drawGameOver } from './screens.js';
 
 let state = STATES.TITLE;
 let player = null;
@@ -24,11 +24,9 @@ let wave = 1;
 let stateTimer = 0;
 let stars = [];
 
-// Name entry (after game over)
-const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-let entryName = '';
-let letterIndex = 0;
-let nameEntrySaved = false;
+// Name entry DOM elements
+let nameOverlay, nameInput, nameSubmit, nameScoreEl;
+let nameEntryDone = false;
 
 // Leaderboard
 const LEADERBOARD_KEY = 'galaga_leaderboard';
@@ -48,7 +46,6 @@ function saveToLeaderboard(name, finalScore, finalWave) {
     return board;
 }
 
-// Load stored high score
 function loadHighScore() {
     const board = loadLeaderboard();
     return board.length > 0 ? board[0].score : 0;
@@ -74,7 +71,6 @@ function updateStars() {
             star.y = 0;
             star.x = Math.random() * GAME_WIDTH;
         }
-        // Twinkle
         star.brightness += (Math.random() - 0.5) * 0.1;
         if (star.brightness < 0.2) star.brightness = 0.2;
         if (star.brightness > 1) star.brightness = 1;
@@ -113,11 +109,56 @@ function changeState(newState) {
     stateTimer = 0;
 }
 
+function showNameEntry() {
+    nameEntryDone = false;
+    nameScoreEl.textContent = 'SCORE: ' + score.toString().padStart(6, '0') + '  WAVE: ' + wave;
+    nameInput.value = '';
+    nameOverlay.style.display = 'flex';
+    // Small delay so the input gets focus after the overlay appears
+    setTimeout(() => nameInput.focus(), 100);
+}
+
+function hideNameEntry() {
+    nameOverlay.style.display = 'none';
+    nameInput.blur();
+}
+
+function submitName() {
+    let name = nameInput.value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (name.length === 0) name = 'ACE';
+    saveToLeaderboard(name, score, wave);
+    highScore = loadHighScore();
+    hideNameEntry();
+    nameEntryDone = true;
+    changeState(STATES.TITLE);
+}
+
 export function init() {
     initInput();
     initAudio();
     initStars();
     highScore = loadHighScore();
+
+    // Grab name entry DOM elements
+    nameOverlay = document.getElementById('nameOverlay');
+    nameInput = document.getElementById('nameInput');
+    nameSubmit = document.getElementById('nameSubmit');
+    nameScoreEl = document.getElementById('nameScore');
+
+    // Submit on button click or Enter key
+    nameSubmit.addEventListener('click', (e) => {
+        e.preventDefault();
+        submitName();
+    });
+    nameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            submitName();
+        }
+        // Stop game keys from firing while typing
+        e.stopPropagation();
+    });
+    nameInput.addEventListener('keyup', (e) => e.stopPropagation());
 }
 
 export function update() {
@@ -138,19 +179,14 @@ export function update() {
             }
             break;
 
-        case STATES.PLAYING:
-            // Update player
+        case STATES.PLAYING: {
             const shotFired = updatePlayer(player, bullets);
             if (shotFired) playShoot();
 
-            // Update formation and aliens
             updateFormation(formation, bullets, player.x);
             updateFormationSpeed(formation);
-
-            // Update bullets
             updateBullets(bullets);
 
-            // Check collisions
             processCollisions(player, formation, bullets, {
                 onAlienHit: (alien) => {
                     score += alien.points;
@@ -171,14 +207,13 @@ export function update() {
                 }
             });
 
-            // Check wave clear
             if (formationCleared(formation)) {
                 nextWave();
             }
             break;
+        }
 
         case STATES.PLAYER_DEATH:
-            // Let particles finish, then check lives
             updateBullets(bullets);
             if (stateTimer >= DEATH_PAUSE_DURATION) {
                 if (player.lives > 0) {
@@ -194,49 +229,13 @@ export function update() {
 
         case STATES.GAME_OVER:
             if (stateTimer >= GAME_OVER_DURATION) {
-                // Transition to name entry
-                entryName = '';
-                letterIndex = 0;
-                nameEntrySaved = false;
+                showNameEntry();
                 changeState(STATES.NAME_ENTRY);
             }
             break;
 
         case STATES.NAME_ENTRY:
-            // Left/right to pick letter
-            if (isPressed('ArrowLeft') || isPressed('KeyA')) {
-                letterIndex = (letterIndex - 1 + ALPHABET.length + 2) % (ALPHABET.length + 2);
-            }
-            if (isPressed('ArrowRight') || isPressed('KeyD')) {
-                letterIndex = (letterIndex + 1) % (ALPHABET.length + 2);
-            }
-            // Up/Down also cycle letters for convenience
-            if (isPressed('ArrowUp') || isPressed('KeyW')) {
-                letterIndex = (letterIndex - 1 + ALPHABET.length + 2) % (ALPHABET.length + 2);
-            }
-            if (isPressed('ArrowDown') || isPressed('KeyS')) {
-                letterIndex = (letterIndex + 1) % (ALPHABET.length + 2);
-            }
-
-            if (isPressed('Enter') || isPressed('Space')) {
-                if (letterIndex === ALPHABET.length) {
-                    // DEL — remove last character
-                    if (entryName.length > 0) {
-                        entryName = entryName.slice(0, -1);
-                    }
-                } else if (letterIndex === ALPHABET.length + 1) {
-                    // OK — save and go to title
-                    if (entryName.length === 0) entryName = 'ACE';
-                    saveToLeaderboard(entryName, score, wave);
-                    highScore = loadHighScore();
-                    changeState(STATES.TITLE);
-                } else {
-                    // Add letter (max 8 chars)
-                    if (entryName.length < 8) {
-                        entryName += ALPHABET[letterIndex];
-                    }
-                }
-            }
+            // Handled entirely by DOM — just wait for submitName() callback
             break;
     }
 
@@ -244,11 +243,8 @@ export function update() {
 }
 
 export function draw(ctx, drawFrame) {
-    // Clear
     ctx.fillStyle = COLORS.BG;
     ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-    // Starfield (always visible)
     drawStars(ctx);
 
     switch (state) {
@@ -262,7 +258,6 @@ export function draw(ctx, drawFrame) {
             break;
 
         case STATES.PLAYING:
-            // Draw formation aliens
             for (const alien of formation.aliens) {
                 drawAlien(ctx, alien, drawFrame);
             }
@@ -286,7 +281,7 @@ export function draw(ctx, drawFrame) {
             break;
 
         case STATES.NAME_ENTRY:
-            drawNameEntry(ctx, score, wave, drawFrame, entryName, letterIndex, ALPHABET);
+            // Canvas shows starfield behind the DOM overlay
             break;
     }
 }

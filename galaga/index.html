@@ -11,6 +11,18 @@
 <body>
     <canvas id="gameCanvas"></canvas>
 
+    <!-- Name entry overlay — shown after game over -->
+    <div id="nameOverlay" class="name-overlay" style="display:none;">
+        <div class="name-box">
+            <div class="name-title">ENTER YOUR NAME</div>
+            <div id="nameScore" class="name-score"></div>
+            <input type="text" id="nameInput" class="name-input" maxlength="8"
+                   placeholder="YOUR NAME" autocomplete="off" autocapitalize="characters"
+                   spellcheck="false">
+            <button id="nameSubmit" class="name-submit">OK</button>
+        </div>
+    </div>
+
     <!-- Touch controls — only visible on touchscreens -->
     <div id="touchControls">
         <div class="touch-left">

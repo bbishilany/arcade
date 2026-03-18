@@ -82,6 +82,78 @@ canvas {
     border-color: #ff4444;
 }
 
+/* Name entry overlay */
+.name-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+}
+
+.name-box {
+    text-align: center;
+    padding: 2rem;
+}
+
+.name-title {
+    font-size: 1rem;
+    color: #00ccff;
+    margin-bottom: 1rem;
+}
+
+.name-score {
+    font-size: 0.7rem;
+    color: #ffffff;
+    margin-bottom: 1.5rem;
+}
+
+.name-input {
+    display: block;
+    margin: 0 auto 1rem;
+    width: 220px;
+    padding: 0.7rem 1rem;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 1.2rem;
+    text-align: center;
+    background: #111;
+    color: #ffff00;
+    border: 3px solid #00ccff;
+    border-radius: 4px;
+    outline: none;
+    text-transform: uppercase;
+}
+
+.name-input::placeholder {
+    color: #555;
+    font-size: 0.6rem;
+}
+
+.name-input:focus {
+    border-color: #ffff00;
+}
+
+.name-submit {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.9rem;
+    padding: 0.6rem 2rem;
+    background: #00ccff;
+    color: #000;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.name-submit:active {
+    background: #ffff00;
+}
+
 /* Show controls on touch devices */
 @media (pointer: coarse) {
     #touchControls {
