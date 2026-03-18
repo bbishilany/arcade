@@ -73,6 +73,7 @@ function createNameFormation() {
             const alien = createAlien(0, 0, type);
             alien.baseX = pos.x;
             alien.baseY = pos.y;
+            alien.noAnim = true;
             aliens.push(alien);
         }
     }
@@ -83,7 +84,7 @@ function createNameFormation() {
         offsetX: 0,
         direction: 1,
         speed: FORMATION_BASE_SPEED + FORMATION_SPEED_INCREMENT,
-        sweepRange: 12,
+        sweepRange: 0,
         diveChance: BASE_DIVE_CHANCE + DIVE_CHANCE_INCREMENT,
         maxDivers: MAX_DIVERS_BASE,
         animTimer: 0,
