@@ -85,8 +85,8 @@ function createNameFormation() {
         direction: 1,
         speed: FORMATION_BASE_SPEED + FORMATION_SPEED_INCREMENT,
         sweepRange: 0,
-        diveChance: BASE_DIVE_CHANCE + DIVE_CHANCE_INCREMENT,
-        maxDivers: MAX_DIVERS_BASE,
+        diveChance: 0,
+        maxDivers: 0,
         animTimer: 0,
         enterTimer: 0,
         entered: false
@@ -131,12 +131,14 @@ export function updateFormation(formation, bullets, playerX) {
         }
     }
 
-    // Side-to-side sweep
-    const sweep = formation.sweepRange || FORMATION_SWEEP_RANGE;
-    formation.offsetX += formation.speed * formation.direction;
-    if (Math.abs(formation.offsetX) > sweep) {
-        formation.direction *= -1;
-        formation.offsetX = sweep * formation.direction;
+    // Side-to-side sweep (skip if sweepRange is 0)
+    const sweep = formation.sweepRange !== undefined ? formation.sweepRange : FORMATION_SWEEP_RANGE;
+    if (sweep > 0) {
+        formation.offsetX += formation.speed * formation.direction;
+        if (Math.abs(formation.offsetX) > sweep) {
+            formation.direction *= -1;
+            formation.offsetX = sweep * formation.direction;
+        }
     }
 
     // Update each alien's formation position
