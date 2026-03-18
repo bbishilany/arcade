@@ -1,7 +1,7 @@
 import { GAME_WIDTH, GAME_HEIGHT, STATES, WAVE_INTRO_DURATION,
          DEATH_PAUSE_DURATION, GAME_OVER_DURATION, COLORS,
          STAR_COUNT, STAR_SPEED_MIN, STAR_SPEED_MAX } from './constants.js';
-import { initInput, isPressed, clearPressed } from './input.js';
+import { initInput, isPressed, isHeld, clearPressed } from './input.js';
 import { createPlayer, updatePlayer, drawPlayer, killPlayer, respawnPlayer } from './player.js';
 import { updateBullets, drawBullets } from './bullet.js';
 import { drawAlien } from './alien.js';
@@ -12,7 +12,7 @@ import { spawnExplosion, updateParticles, drawParticles, clearParticles } from '
 import { initAudio, playShoot, playExplosion, playPlayerDeath,
          playWaveComplete, playGameOver, playStartGame } from './audio.js';
 import { drawHUD } from './hud.js';
-import { drawTitleScreen, drawWaveIntro, drawGameOver } from './screens.js';
+import { drawTitleScreen, drawNameSelect, drawWaveIntro, drawGameOver } from './screens.js';
 
 let state = STATES.TITLE;
 let player = null;
@@ -22,8 +22,37 @@ let score = 0;
 let highScore = 0;
 let wave = 1;
 let stateTimer = 0;
-let frameCount = 0;
 let stars = [];
+
+// Player name
+const PLAYER_NAMES = ['BILLY', 'OLLIE', 'THEO', 'MATTHEW'];
+let selectedNameIndex = 0;
+let nameConfirmed = false;
+let playerName = '';
+
+// Leaderboard
+const LEADERBOARD_KEY = 'galaga_leaderboard';
+
+function loadLeaderboard() {
+    try {
+        return JSON.parse(localStorage.getItem(LEADERBOARD_KEY)) || [];
+    } catch { return []; }
+}
+
+function saveToLeaderboard(name, finalScore, finalWave) {
+    const board = loadLeaderboard();
+    board.push({ name, score: finalScore, wave: finalWave });
+    board.sort((a, b) => b.score - a.score);
+    if (board.length > 10) board.length = 10;
+    localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(board));
+    return board;
+}
+
+// Load stored high score
+function loadHighScore() {
+    const board = loadLeaderboard();
+    return board.length > 0 ? board[0].score : 0;
+}
 
 function initStars() {
     stars = [];
@@ -88,10 +117,10 @@ export function init() {
     initInput();
     initAudio();
     initStars();
+    highScore = loadHighScore();
 }
 
 export function update() {
-    frameCount++;
     stateTimer++;
     updateStars();
     updateParticles();
@@ -99,7 +128,28 @@ export function update() {
     switch (state) {
         case STATES.TITLE:
             if (isPressed('Enter')) {
-                startGame();
+                changeState(STATES.NAME_SELECT);
+            }
+            break;
+
+        case STATES.NAME_SELECT:
+            if (isPressed('ArrowUp') || isPressed('KeyW')) {
+                selectedNameIndex = (selectedNameIndex - 1 + PLAYER_NAMES.length) % PLAYER_NAMES.length;
+                nameConfirmed = false;
+            }
+            if (isPressed('ArrowDown') || isPressed('KeyS') ||
+                isPressed('ArrowLeft') || isPressed('ArrowRight')) {
+                selectedNameIndex = (selectedNameIndex + 1) % PLAYER_NAMES.length;
+                nameConfirmed = false;
+            }
+            if (isPressed('Enter') || isPressed('Space')) {
+                // On touch: first tap highlights, second tap confirms
+                if (nameConfirmed) {
+                    playerName = PLAYER_NAMES[selectedNameIndex];
+                    startGame();
+                } else {
+                    nameConfirmed = true;
+                }
             }
             break;
 
@@ -158,6 +208,7 @@ export function update() {
                     changeState(STATES.PLAYING);
                 } else {
                     playGameOver();
+                    saveToLeaderboard(playerName, score, wave);
                     changeState(STATES.GAME_OVER);
                 }
             }
@@ -173,7 +224,7 @@ export function update() {
     clearPressed();
 }
 
-export function draw(ctx) {
+export function draw(ctx, drawFrame) {
     // Clear
     ctx.fillStyle = COLORS.BG;
     ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -183,7 +234,11 @@ export function draw(ctx) {
 
     switch (state) {
         case STATES.TITLE:
-            drawTitleScreen(ctx, frameCount);
+            drawTitleScreen(ctx, drawFrame, loadLeaderboard());
+            break;
+
+        case STATES.NAME_SELECT:
+            drawNameSelect(ctx, drawFrame, PLAYER_NAMES, selectedNameIndex, nameConfirmed);
             break;
 
         case STATES.WAVE_INTRO:
@@ -194,9 +249,9 @@ export function draw(ctx) {
         case STATES.PLAYING:
             // Draw formation aliens
             for (const alien of formation.aliens) {
-                drawAlien(ctx, alien, frameCount);
+                drawAlien(ctx, alien, drawFrame);
             }
-            drawPlayer(ctx, player, frameCount);
+            drawPlayer(ctx, player, drawFrame);
             drawBullets(ctx, bullets);
             drawParticles(ctx);
             drawHUD(ctx, score, highScore, player.lives, wave);
@@ -204,7 +259,7 @@ export function draw(ctx) {
 
         case STATES.PLAYER_DEATH:
             for (const alien of formation.aliens) {
-                drawAlien(ctx, alien, frameCount);
+                drawAlien(ctx, alien, drawFrame);
             }
             drawBullets(ctx, bullets);
             drawParticles(ctx);
@@ -212,7 +267,7 @@ export function draw(ctx) {
             break;
 
         case STATES.GAME_OVER:
-            drawGameOver(ctx, score, highScore, stateTimer);
+            drawGameOver(ctx, score, highScore, drawFrame, playerName, loadLeaderboard());
             break;
     }
 }

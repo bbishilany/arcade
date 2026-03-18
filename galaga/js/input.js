@@ -45,7 +45,7 @@ export function initInput() {
     // Touch controls — visible buttons for iPad/phone
     initTouchButtons();
 
-    // Tap on canvas = Enter (for start/restart screens)
+    // Tap on canvas — acts as Enter for menus, or cycles names on name select
     const canvas = document.getElementById('gameCanvas');
     canvas.addEventListener('touchstart', (e) => {
         e.preventDefault();

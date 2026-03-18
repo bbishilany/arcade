@@ -35,6 +35,7 @@ const FPS = 60;
 const FRAME_TIME = 1000 / FPS;
 let lastTime = 0;
 let accumulator = 0;
+let drawFrame = 0;
 
 function gameLoop(timestamp) {
     if (lastTime === 0) lastTime = timestamp;
@@ -52,7 +53,9 @@ function gameLoop(timestamp) {
         accumulator -= FRAME_TIME;
     }
 
-    draw(ctx);
+    // drawFrame only increments once per visual frame — no flicker
+    drawFrame++;
+    draw(ctx, drawFrame);
     requestAnimationFrame(gameLoop);
 }
 

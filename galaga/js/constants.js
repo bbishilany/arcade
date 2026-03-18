@@ -66,6 +66,7 @@ export const COLORS = {
 // Game states
 export const STATES = {
     TITLE: 'TITLE',
+    NAME_SELECT: 'NAME_SELECT',
     WAVE_INTRO: 'WAVE_INTRO',
     PLAYING: 'PLAYING',
     PLAYER_DEATH: 'PLAYER_DEATH',
