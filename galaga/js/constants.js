@@ -14,14 +14,14 @@ export const MAX_PLAYER_BULLETS = 10;
 // Bullets
 export const PLAYER_BULLET_SPEED = 7;
 export const ALIEN_BULLET_SPEED = 3.5;
-export const BULLET_WIDTH = 3;
-export const BULLET_HEIGHT = 10;
+export const BULLET_WIDTH = 8;
+export const BULLET_HEIGHT = 14;
 
 // Alien formation
 export const FORMATION_COLS = 10;
 export const FORMATION_ROWS = 5;
-export const ALIEN_WIDTH = 24;
-export const ALIEN_HEIGHT = 24;
+export const ALIEN_WIDTH = 30;
+export const ALIEN_HEIGHT = 28;
 export const ALIEN_SPACING_X = 36;
 export const ALIEN_SPACING_Y = 32;
 export const FORMATION_TOP = 60;
