@@ -49,73 +49,83 @@ export const PLAYER_SPRITE = [
     [C,_,_,_,_,_,_,_,_,_,_,_,C],
 ];
 
-// Commander alien (green boss)
+// Commander alien (green boss) — horned skull with glowing eyes
 export const COMMANDER_SPRITE_A = [
-    [_,_,_,_,G,G,G,G,_,_,_,_],
-    [_,_,G,G,G,G,G,G,G,G,_,_],
-    [_,G,G,G,G,G,G,G,G,G,G,_],
-    [G,G,G,W,W,G,G,W,W,G,G,G],
-    [G,G,G,G,G,G,G,G,G,G,G,G],
-    [_,_,G,G,G,_,_,G,G,G,_,_],
-    [_,G,G,_,G,G,G,G,_,G,G,_],
-    [G,G,_,_,_,G,G,_,_,_,G,G],
+    [_,G,_,_,_,_,_,_,_,_,_,G,_],
+    [G,G,_,_,_,_,_,_,_,_,_,G,G],
+    [G,G,G,_,G,G,G,G,G,_,G,G,G],
+    [_,G,G,G,G,G,G,G,G,G,G,G,_],
+    [_,G,G,R,R,G,G,G,R,R,G,G,_],
+    [_,G,G,R,W,G,G,G,W,R,G,G,_],
+    [_,_,G,G,G,G,G,G,G,G,G,_,_],
+    [_,_,G,G,_,G,G,G,_,G,G,_,_],
+    [_,_,_,G,G,_,_,_,G,G,_,_,_],
+    [_,_,_,_,G,G,G,G,G,_,_,_,_],
 ];
 
 export const COMMANDER_SPRITE_B = [
-    [_,_,_,_,G,G,G,G,_,_,_,_],
-    [_,_,G,G,G,G,G,G,G,G,_,_],
-    [_,G,G,G,G,G,G,G,G,G,G,_],
-    [G,G,G,W,W,G,G,W,W,G,G,G],
-    [G,G,G,G,G,G,G,G,G,G,G,G],
-    [_,_,G,G,_,G,G,_,G,G,_,_],
-    [_,G,_,G,G,_,_,G,G,_,G,_],
-    [_,_,G,_,_,_,_,_,_,G,_,_],
+    [G,G,_,_,_,_,_,_,_,_,_,G,G],
+    [_,G,G,_,_,_,_,_,_,_,G,G,_],
+    [_,G,G,G,G,G,G,G,G,G,G,G,_],
+    [_,G,G,G,G,G,G,G,G,G,G,G,_],
+    [_,G,G,R,R,G,G,G,R,R,G,G,_],
+    [_,G,G,R,W,G,G,G,W,R,G,G,_],
+    [_,_,G,G,G,G,G,G,G,G,G,_,_],
+    [_,_,G,_,G,G,G,G,G,_,G,_,_],
+    [_,_,_,G,_,_,_,_,_,G,_,_,_],
+    [_,_,G,G,_,_,_,_,_,G,G,_,_],
 ];
 
-// Butterfly alien (magenta)
+// Butterfly alien (magenta) — wings spread with antenna
 export const BUTTERFLY_SPRITE_A = [
-    [_,_,_,_,M,M,M,M,_,_,_,_],
-    [_,_,M,M,M,M,M,M,M,M,_,_],
-    [_,M,M,M,W,M,M,W,M,M,M,_],
-    [_,M,M,M,M,M,M,M,M,M,M,_],
-    [M,M,_,M,M,M,M,M,M,_,M,M],
-    [M,_,_,_,M,M,M,M,_,_,_,M],
-    [M,_,_,_,M,_,_,M,_,_,_,M],
-    [_,_,_,M,_,_,_,_,M,_,_,_],
+    [_,_,_,_,_,M,_,M,_,_,_,_,_],
+    [_,_,_,_,M,M,_,M,M,_,_,_,_],
+    [_,_,_,_,M,M,M,M,M,_,_,_,_],
+    [_,M,M,_,M,W,M,W,M,_,M,M,_],
+    [M,M,M,M,M,M,M,M,M,M,M,M,M],
+    [M,B,M,M,M,M,M,M,M,M,M,B,M],
+    [M,M,M,M,_,M,M,M,_,M,M,M,M],
+    [_,M,M,_,_,_,M,_,_,_,M,M,_],
+    [_,_,M,_,_,_,_,_,_,_,M,_,_],
 ];
 
 export const BUTTERFLY_SPRITE_B = [
-    [_,_,_,_,M,M,M,M,_,_,_,_],
-    [_,_,M,M,M,M,M,M,M,M,_,_],
-    [_,M,M,M,W,M,M,W,M,M,M,_],
-    [_,M,M,M,M,M,M,M,M,M,M,_],
-    [_,_,M,M,M,M,M,M,M,M,_,_],
-    [_,M,M,_,M,M,M,M,_,M,M,_],
-    [M,M,_,_,_,M,M,_,_,_,M,M],
-    [M,_,_,_,_,_,_,_,_,_,_,M],
+    [_,_,_,_,_,M,_,M,_,_,_,_,_],
+    [_,_,_,_,M,M,_,M,M,_,_,_,_],
+    [_,_,_,_,M,M,M,M,M,_,_,_,_],
+    [_,_,M,M,M,W,M,W,M,M,M,_,_],
+    [_,M,M,M,M,M,M,M,M,M,M,M,_],
+    [M,M,B,M,M,M,M,M,M,M,B,M,M],
+    [M,M,M,M,_,M,M,M,_,M,M,M,M],
+    [M,M,_,_,_,_,M,_,_,_,_,M,M],
+    [M,_,_,_,_,_,_,_,_,_,_,_,M],
 ];
 
-// Bee alien (yellow)
+// Bee alien (yellow) — striped bug with stinger
 export const BEE_SPRITE_A = [
+    [_,_,_,_,Y,_,_,Y,_,_,_,_],
     [_,_,_,Y,Y,Y,Y,Y,Y,_,_,_],
+    [_,_,Y,Y,W,Y,Y,W,Y,Y,_,_],
     [_,_,Y,Y,Y,Y,Y,Y,Y,Y,_,_],
-    [_,Y,Y,W,Y,Y,Y,Y,W,Y,Y,_],
-    [_,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,_],
-    [_,_,Y,Y,Y,Y,Y,Y,Y,Y,_,_],
-    [_,_,_,Y,Y,_,_,Y,Y,_,_,_],
-    [_,_,Y,Y,_,_,_,_,Y,Y,_,_],
-    [_,Y,Y,_,_,_,_,_,_,Y,Y,_],
+    [_,Y,O,Y,Y,Y,Y,Y,Y,O,Y,_],
+    [_,Y,Y,O,Y,Y,Y,Y,O,Y,Y,_],
+    [_,_,Y,Y,O,Y,Y,O,Y,Y,_,_],
+    [_,_,_,Y,Y,Y,Y,Y,Y,_,_,_],
+    [_,_,_,_,Y,_,_,Y,_,_,_,_],
+    [_,_,_,_,_,Y,Y,_,_,_,_,_],
 ];
 
 export const BEE_SPRITE_B = [
-    [_,_,_,Y,Y,Y,Y,Y,Y,_,_,_],
-    [_,_,Y,Y,Y,Y,Y,Y,Y,Y,_,_],
-    [_,Y,Y,W,Y,Y,Y,Y,W,Y,Y,_],
-    [_,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,_],
-    [_,_,Y,Y,Y,Y,Y,Y,Y,Y,_,_],
-    [_,_,_,Y,_,Y,Y,_,Y,_,_,_],
-    [_,_,_,_,Y,_,_,Y,_,_,_,_],
     [_,_,_,Y,_,_,_,_,Y,_,_,_],
+    [_,_,_,Y,Y,Y,Y,Y,Y,_,_,_],
+    [_,_,Y,Y,W,Y,Y,W,Y,Y,_,_],
+    [_,_,Y,Y,Y,Y,Y,Y,Y,Y,_,_],
+    [_,Y,Y,O,Y,Y,Y,Y,O,Y,Y,_],
+    [_,_,Y,Y,O,Y,Y,O,Y,Y,_,_],
+    [_,_,Y,Y,Y,O,O,Y,Y,Y,_,_],
+    [_,_,_,Y,Y,Y,Y,Y,Y,_,_,_],
+    [_,_,_,Y,_,_,_,_,Y,_,_,_],
+    [_,_,_,_,_,Y,Y,_,_,_,_,_],
 ];
 
 // Explosion sprite

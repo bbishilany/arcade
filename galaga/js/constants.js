@@ -8,8 +8,8 @@ export const PLAYER_WIDTH = 30;
 export const PLAYER_HEIGHT = 24;
 export const PLAYER_Y_OFFSET = 50; // from bottom
 export const MAX_LIVES = 3;
-export const FIRE_COOLDOWN = 12; // frames between shots
-export const MAX_PLAYER_BULLETS = 2;
+export const FIRE_COOLDOWN = 6; // frames between shots
+export const MAX_PLAYER_BULLETS = 10;
 
 // Bullets
 export const PLAYER_BULLET_SPEED = 7;
