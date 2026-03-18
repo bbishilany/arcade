@@ -7,6 +7,7 @@ import { createAlien, getAlienType, startDive, updateAlien } from './alien.js';
 // Pixel letter definitions — each is an array of [col, row] positions
 const LETTERS = {
     A: [[1,0],[2,0], [0,1],[3,1], [0,2],[1,2],[2,2],[3,2], [0,3],[3,3], [0,4],[3,4]],
+    C: [[1,0],[2,0],[3,0], [0,1], [0,2], [0,3], [1,4],[2,4],[3,4]],
     D: [[0,0],[1,0],[2,0], [0,1],[3,1], [0,2],[3,2], [0,3],[3,3], [0,4],[1,4],[2,4]],
     E: [[0,0],[1,0],[2,0], [0,1], [0,2],[1,2], [0,3], [0,4],[1,4],[2,4]],
     H: [[0,0],[3,0], [0,1],[3,1], [0,2],[1,2],[2,2],[3,2], [0,3],[3,3], [0,4],[3,4]],
@@ -25,7 +26,7 @@ const LETTERS = {
 
 // Width of each letter (rightmost column + 1)
 const LETTER_WIDTHS = {
-    A: 4, D: 4, E: 3, H: 4, I: 3, K: 3, L: 3, M: 5,
+    A: 4, C: 4, D: 4, E: 3, H: 4, I: 3, K: 3, L: 3, M: 5,
     N: 4, O: 4, S: 4, T: 5, U: 4, W: 5, Y: 3
 };
 
@@ -90,7 +91,7 @@ export function createFormation(wave) {
     // Name waves
     if (wave === 3) return createNameFormation('OLLIE', wave);
     if (wave === 4) return createNameFormation('THEO', wave);
-    if (wave === 5) return createNameFormation('MATTHEW', wave);
+    if (wave === 5) return createNameFormation('MICHAEL', wave);
     if (wave === 6) return createNameFormation('HUDSON', wave);
     if (wave === 7) return createNameFormation('KENNEDY', wave);
 
