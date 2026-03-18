@@ -35,79 +35,52 @@ export function initInput() {
         keys[e.code] = false;
     });
 
-    // Touch controls — left side moves, right side fires, tap anywhere for Enter
-    const canvas = document.getElementById('gameCanvas');
+    // Touch controls — visible buttons for iPad/phone
+    initTouchButtons();
 
+    // Tap on canvas = Enter (for start/restart screens)
+    const canvas = document.getElementById('gameCanvas');
     canvas.addEventListener('touchstart', (e) => {
         e.preventDefault();
-        for (const touch of e.changedTouches) {
-            const zone = getTouchZone(touch, canvas);
-            activeTouches[touch.identifier] = zone;
-            applyTouch(zone, true);
-        }
+        justPressed['Enter'] = true;
+        keys['Enter'] = true;
+        setTimeout(() => { keys['Enter'] = false; }, 50);
     }, { passive: false });
-
-    canvas.addEventListener('touchmove', (e) => {
-        e.preventDefault();
-        for (const touch of e.changedTouches) {
-            const oldZone = activeTouches[touch.identifier];
-            const newZone = getTouchZone(touch, canvas);
-            if (oldZone !== newZone) {
-                if (oldZone) applyTouch(oldZone, false);
-                activeTouches[touch.identifier] = newZone;
-                applyTouch(newZone, true);
-            }
-        }
-    }, { passive: false });
-
-    canvas.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        for (const touch of e.changedTouches) {
-            const zone = activeTouches[touch.identifier];
-            if (zone) applyTouch(zone, false);
-            delete activeTouches[touch.identifier];
-        }
-    }, { passive: false });
-
-    canvas.addEventListener('touchcancel', (e) => {
-        for (const touch of e.changedTouches) {
-            const zone = activeTouches[touch.identifier];
-            if (zone) applyTouch(zone, false);
-            delete activeTouches[touch.identifier];
-        }
-    });
 }
 
-function getTouchZone(touch, canvas) {
-    const rect = canvas.getBoundingClientRect();
-    const x = (touch.clientX - rect.left) / rect.width;
-    const y = (touch.clientY - rect.top) / rect.height;
+function initTouchButtons() {
+    const btnLeft = document.getElementById('btnLeft');
+    const btnRight = document.getElementById('btnRight');
+    const btnFire = document.getElementById('btnFire');
 
-    // Bottom 40% of screen = controls, top 60% = tap for Enter
-    if (y < 0.6) return 'enter';
-    if (x < 0.35) return 'left';
-    if (x > 0.65) return 'right';
-    return 'fire';
-}
+    if (!btnLeft) return; // no touch controls in DOM
 
-function applyTouch(zone, down) {
-    if (zone === 'left') {
-        if (down && !keys['ArrowLeft']) justPressed['ArrowLeft'] = true;
-        keys['ArrowLeft'] = down;
-    } else if (zone === 'right') {
-        if (down && !keys['ArrowRight']) justPressed['ArrowRight'] = true;
-        keys['ArrowRight'] = down;
-    } else if (zone === 'fire') {
-        if (down && !keys['Space']) justPressed['Space'] = true;
-        keys['Space'] = down;
-    } else if (zone === 'enter') {
-        if (down) {
-            justPressed['Enter'] = true;
-            keys['Enter'] = true;
-            // Release Enter after a frame so it acts as a tap
-            setTimeout(() => { keys['Enter'] = false; }, 50);
-        }
+    // Helper: bind a button to a key code
+    function bindButton(btn, code) {
+        btn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            btn.classList.add('active');
+            if (!keys[code]) justPressed[code] = true;
+            keys[code] = true;
+        }, { passive: false });
+
+        btn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            btn.classList.remove('active');
+            keys[code] = false;
+        }, { passive: false });
+
+        btn.addEventListener('touchcancel', (e) => {
+            btn.classList.remove('active');
+            keys[code] = false;
+        });
     }
+
+    bindButton(btnLeft, 'ArrowLeft');
+    bindButton(btnRight, 'ArrowRight');
+    bindButton(btnFire, 'Space');
 }
 
 export function isHeld(code) {
