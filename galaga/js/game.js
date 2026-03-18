@@ -13,6 +13,7 @@ import { initAudio, playShoot, playExplosion, playPlayerDeath,
          playWaveComplete, playGameOver, playStartGame } from './audio.js';
 import { drawHUD } from './hud.js';
 import { drawTitleScreen, drawWaveIntro, drawGameOver } from './screens.js';
+import { refreshLeaderboard, getLeaderboard, getHighScore, saveScore } from './leaderboard.js';
 
 let state = STATES.TITLE;
 let player = null;
@@ -26,30 +27,6 @@ let stars = [];
 
 // Name entry DOM elements
 let nameOverlay, nameInput, nameSubmit, nameScoreEl;
-let nameEntryDone = false;
-
-// Leaderboard
-const LEADERBOARD_KEY = 'galaga_leaderboard';
-
-function loadLeaderboard() {
-    try {
-        return JSON.parse(localStorage.getItem(LEADERBOARD_KEY)) || [];
-    } catch { return []; }
-}
-
-function saveToLeaderboard(name, finalScore, finalWave) {
-    const board = loadLeaderboard();
-    board.push({ name, score: finalScore, wave: finalWave });
-    board.sort((a, b) => b.score - a.score);
-    if (board.length > 10) board.length = 10;
-    localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(board));
-    return board;
-}
-
-function loadHighScore() {
-    const board = loadLeaderboard();
-    return board.length > 0 ? board[0].score : 0;
-}
 
 function initStars() {
     stars = [];
@@ -108,14 +85,19 @@ function nextWave() {
 function changeState(newState) {
     state = newState;
     stateTimer = 0;
+
+    // Refresh leaderboard when entering title screen
+    if (newState === STATES.TITLE) {
+        refreshLeaderboard().then(() => {
+            highScore = getHighScore();
+        });
+    }
 }
 
 function showNameEntry() {
-    nameEntryDone = false;
     nameScoreEl.textContent = 'SCORE: ' + score.toString().padStart(6, '0') + '  WAVE: ' + wave;
     nameInput.value = '';
     nameOverlay.style.display = 'flex';
-    // Small delay so the input gets focus after the overlay appears
     setTimeout(() => nameInput.focus(), 100);
 }
 
@@ -127,18 +109,24 @@ function hideNameEntry() {
 function submitName() {
     let name = nameInput.value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
     if (name.length === 0) name = 'ACE';
-    saveToLeaderboard(name, score, wave);
-    highScore = loadHighScore();
     hideNameEntry();
-    nameEntryDone = true;
-    changeState(STATES.TITLE);
+
+    // Save online + local, then go to title
+    saveScore(name, score, wave).then(() => {
+        highScore = getHighScore();
+        changeState(STATES.TITLE);
+    });
 }
 
 export function init() {
     initInput();
     initAudio();
     initStars();
-    highScore = loadHighScore();
+
+    // Load online leaderboard in background
+    refreshLeaderboard().then(() => {
+        highScore = getHighScore();
+    });
 
     // Grab name entry DOM elements
     nameOverlay = document.getElementById('nameOverlay');
@@ -146,7 +134,6 @@ export function init() {
     nameSubmit = document.getElementById('nameSubmit');
     nameScoreEl = document.getElementById('nameScore');
 
-    // Submit on button click or Enter key
     nameSubmit.addEventListener('click', (e) => {
         e.preventDefault();
         submitName();
@@ -156,7 +143,6 @@ export function init() {
             e.preventDefault();
             submitName();
         }
-        // Stop game keys from firing while typing
         e.stopPropagation();
     });
     nameInput.addEventListener('keyup', (e) => e.stopPropagation());
@@ -236,7 +222,6 @@ export function update() {
             break;
 
         case STATES.NAME_ENTRY:
-            // Handled entirely by DOM — just wait for submitName() callback
             break;
     }
 
@@ -250,7 +235,7 @@ export function draw(ctx, drawFrame) {
 
     switch (state) {
         case STATES.TITLE:
-            drawTitleScreen(ctx, drawFrame, loadLeaderboard());
+            drawTitleScreen(ctx, drawFrame, getLeaderboard());
             break;
 
         case STATES.WAVE_INTRO:
@@ -282,7 +267,6 @@ export function draw(ctx, drawFrame) {
             break;
 
         case STATES.NAME_ENTRY:
-            // Canvas shows starfield behind the DOM overlay
             break;
     }
 }

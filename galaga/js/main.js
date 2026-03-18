@@ -8,11 +8,15 @@ const ctx = canvas.getContext('2d');
 canvas.width = GAME_WIDTH;
 canvas.height = GAME_HEIGHT;
 
+// Detect touch device
+const isTouch = matchMedia('(pointer: coarse)').matches;
+
 // Scale canvas to fit window while maintaining aspect ratio
 function resizeCanvas() {
     const ratio = GAME_WIDTH / GAME_HEIGHT;
     let w = window.innerWidth;
-    let h = window.innerHeight;
+    // Reserve space for touch controls on mobile
+    let h = isTouch ? window.innerHeight - 130 : window.innerHeight;
 
     if (w / h > ratio) {
         w = h * ratio;
