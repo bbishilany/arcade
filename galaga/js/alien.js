@@ -88,6 +88,11 @@ export function updateAlien(alien, bullets, playerX) {
         // In formation — position set by formation.js
         alien.x = alien.formX;
         alien.y = alien.formY;
+
+        // Shoot from formation (low chance per frame)
+        if (Math.random() < ALIEN_FIRE_CHANCE * 0.15) {
+            bullets.push(createAlienBullet(alien.x, alien.y + alien.height / 2));
+        }
     }
 }
 
