@@ -1,4 +1,4 @@
-// AABB collision detection
+// AABB collision detection with swept support for fast bullets
 
 export function checkCollision(a, b) {
     return (
@@ -6,6 +6,22 @@ export function checkCollision(a, b) {
         a.x + a.width / 2 > b.x - b.width / 2 &&
         a.y - a.height / 2 < b.y + b.height / 2 &&
         a.y + a.height / 2 > b.y - b.height / 2
+    );
+}
+
+// Swept collision for upward-moving player bullets:
+// Extends the bullet hitbox to cover the full path it traveled this frame
+function checkSweptBulletCollision(bullet, target) {
+    const speed = bullet.speed || 7;
+    // Bullet moved upward, so it was at (y + speed) last frame
+    const bulletTop = bullet.y - bullet.height / 2;
+    const bulletBottom = bullet.y + bullet.height / 2 + speed; // where it was last frame
+
+    return (
+        bullet.x - bullet.width / 2 < target.x + target.width / 2 &&
+        bullet.x + bullet.width / 2 > target.x - target.width / 2 &&
+        bulletTop < target.y + target.height / 2 &&
+        bulletBottom > target.y - target.height / 2
     );
 }
 
@@ -20,7 +36,8 @@ export function processCollisions(player, formation, bullets, callbacks) {
         for (const alien of formation.aliens) {
             if (!alien.alive) continue;
 
-            if (checkCollision(bullet, alien)) {
+            // Use swept collision to handle fast bullets
+            if (checkSweptBulletCollision(bullet, alien)) {
                 alien.alive = false;
                 onAlienHit(alien);
 

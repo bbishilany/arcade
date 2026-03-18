@@ -70,11 +70,12 @@ export function drawBullets(ctx, bullets) {
             ctx.fillStyle = 'rgba(255, 100, 0, 0.3)';
             ctx.fillRect(b.x - b.width, b.y - b.height, b.width * 2, b.height * 2);
         } else if (b.isPlayer) {
+            // Draw bullet as a bright bolt
             ctx.fillStyle = COLORS.PLAYER_BULLET;
-            ctx.fillRect(b.x - b.width / 2, b.y - b.height / 2, b.width, b.height);
+            ctx.fillRect(b.x - 3, b.y - b.height / 2, 6, b.height);
             // Glow
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-            ctx.fillRect(b.x - b.width, b.y - b.height / 2 - 1, b.width * 2, b.height + 2);
+            ctx.fillStyle = 'rgba(100, 200, 255, 0.4)';
+            ctx.fillRect(b.x - 5, b.y - b.height / 2 - 1, 10, b.height + 2);
         } else {
             ctx.fillStyle = COLORS.ALIEN_BULLET;
             ctx.fillRect(b.x - b.width / 2, b.y - b.height / 2, b.width, b.height);

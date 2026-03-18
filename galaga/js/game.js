@@ -12,7 +12,7 @@ import { spawnExplosion, updateParticles, drawParticles, clearParticles } from '
 import { initAudio, playShoot, playExplosion, playPlayerDeath,
          playWaveComplete, playGameOver, playStartGame } from './audio.js';
 import { drawHUD } from './hud.js';
-import { drawTitleScreen, drawNameSelect, drawWaveIntro, drawGameOver } from './screens.js';
+import { drawTitleScreen, drawWaveIntro, drawGameOver, drawNameEntry } from './screens.js';
 
 let state = STATES.TITLE;
 let player = null;
@@ -24,11 +24,11 @@ let wave = 1;
 let stateTimer = 0;
 let stars = [];
 
-// Player name
-const PLAYER_NAMES = ['BILLY', 'OLLIE', 'THEO', 'MATTHEW'];
-let selectedNameIndex = 0;
-let nameConfirmed = false;
-let playerName = '';
+// Name entry (after game over)
+const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+let entryName = '';
+let letterIndex = 0;
+let nameEntrySaved = false;
 
 // Leaderboard
 const LEADERBOARD_KEY = 'galaga_leaderboard';
@@ -128,28 +128,7 @@ export function update() {
     switch (state) {
         case STATES.TITLE:
             if (isPressed('Enter')) {
-                changeState(STATES.NAME_SELECT);
-            }
-            break;
-
-        case STATES.NAME_SELECT:
-            if (isPressed('ArrowUp') || isPressed('KeyW')) {
-                selectedNameIndex = (selectedNameIndex - 1 + PLAYER_NAMES.length) % PLAYER_NAMES.length;
-                nameConfirmed = false;
-            }
-            if (isPressed('ArrowDown') || isPressed('KeyS') ||
-                isPressed('ArrowLeft') || isPressed('ArrowRight')) {
-                selectedNameIndex = (selectedNameIndex + 1) % PLAYER_NAMES.length;
-                nameConfirmed = false;
-            }
-            if (isPressed('Enter') || isPressed('Space')) {
-                // On touch: first tap highlights, second tap confirms
-                if (nameConfirmed) {
-                    playerName = PLAYER_NAMES[selectedNameIndex];
-                    startGame();
-                } else {
-                    nameConfirmed = true;
-                }
+                startGame();
             }
             break;
 
@@ -208,15 +187,55 @@ export function update() {
                     changeState(STATES.PLAYING);
                 } else {
                     playGameOver();
-                    saveToLeaderboard(playerName, score, wave);
                     changeState(STATES.GAME_OVER);
                 }
             }
             break;
 
         case STATES.GAME_OVER:
-            if (stateTimer >= GAME_OVER_DURATION && isPressed('Enter')) {
-                changeState(STATES.TITLE);
+            if (stateTimer >= GAME_OVER_DURATION) {
+                // Transition to name entry
+                entryName = '';
+                letterIndex = 0;
+                nameEntrySaved = false;
+                changeState(STATES.NAME_ENTRY);
+            }
+            break;
+
+        case STATES.NAME_ENTRY:
+            // Left/right to pick letter
+            if (isPressed('ArrowLeft') || isPressed('KeyA')) {
+                letterIndex = (letterIndex - 1 + ALPHABET.length + 2) % (ALPHABET.length + 2);
+            }
+            if (isPressed('ArrowRight') || isPressed('KeyD')) {
+                letterIndex = (letterIndex + 1) % (ALPHABET.length + 2);
+            }
+            // Up/Down also cycle letters for convenience
+            if (isPressed('ArrowUp') || isPressed('KeyW')) {
+                letterIndex = (letterIndex - 1 + ALPHABET.length + 2) % (ALPHABET.length + 2);
+            }
+            if (isPressed('ArrowDown') || isPressed('KeyS')) {
+                letterIndex = (letterIndex + 1) % (ALPHABET.length + 2);
+            }
+
+            if (isPressed('Enter') || isPressed('Space')) {
+                if (letterIndex === ALPHABET.length) {
+                    // DEL — remove last character
+                    if (entryName.length > 0) {
+                        entryName = entryName.slice(0, -1);
+                    }
+                } else if (letterIndex === ALPHABET.length + 1) {
+                    // OK — save and go to title
+                    if (entryName.length === 0) entryName = 'ACE';
+                    saveToLeaderboard(entryName, score, wave);
+                    highScore = loadHighScore();
+                    changeState(STATES.TITLE);
+                } else {
+                    // Add letter (max 8 chars)
+                    if (entryName.length < 8) {
+                        entryName += ALPHABET[letterIndex];
+                    }
+                }
             }
             break;
     }
@@ -235,10 +254,6 @@ export function draw(ctx, drawFrame) {
     switch (state) {
         case STATES.TITLE:
             drawTitleScreen(ctx, drawFrame, loadLeaderboard());
-            break;
-
-        case STATES.NAME_SELECT:
-            drawNameSelect(ctx, drawFrame, PLAYER_NAMES, selectedNameIndex, nameConfirmed);
             break;
 
         case STATES.WAVE_INTRO:
@@ -267,7 +282,11 @@ export function draw(ctx, drawFrame) {
             break;
 
         case STATES.GAME_OVER:
-            drawGameOver(ctx, score, highScore, drawFrame, playerName, loadLeaderboard());
+            drawGameOver(ctx, score, highScore, drawFrame);
+            break;
+
+        case STATES.NAME_ENTRY:
+            drawNameEntry(ctx, score, wave, drawFrame, entryName, letterIndex, ALPHABET);
             break;
     }
 }

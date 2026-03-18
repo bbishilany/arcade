@@ -9,7 +9,7 @@ export const PLAYER_HEIGHT = 24;
 export const PLAYER_Y_OFFSET = 50; // from bottom
 export const MAX_LIVES = 3;
 export const FIRE_COOLDOWN = 6; // frames between shots
-export const MAX_PLAYER_BULLETS = 10;
+export const MAX_PLAYER_BULLETS = 99;
 
 // Bullets
 export const PLAYER_BULLET_SPEED = 7;
@@ -66,11 +66,11 @@ export const COLORS = {
 // Game states
 export const STATES = {
     TITLE: 'TITLE',
-    NAME_SELECT: 'NAME_SELECT',
     WAVE_INTRO: 'WAVE_INTRO',
     PLAYING: 'PLAYING',
     PLAYER_DEATH: 'PLAYER_DEATH',
-    GAME_OVER: 'GAME_OVER'
+    GAME_OVER: 'GAME_OVER',
+    NAME_ENTRY: 'NAME_ENTRY'
 };
 
 // Timing
