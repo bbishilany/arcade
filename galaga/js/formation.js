@@ -51,6 +51,7 @@ function createNameFormation(word, wave) {
             alien.baseY = startY + r * 22;
             alien.noAnim = true;
             alien.noDive = true;
+            alien.fireScale = Math.min(wave * 0.1, 1);
             aliens.push(alien);
         }
 
@@ -79,11 +80,16 @@ export function createFormation(wave) {
     // Wave 4: spell THEO
     if (wave === 4) return createNameFormation('THEO', wave);
 
+    // Fire rate scales up: wave 1=10%, wave 5=50%, wave 10+=100%
+    const fireScale = Math.min(wave * 0.1, 1);
+
     const aliens = [];
     for (let row = 0; row < FORMATION_ROWS; row++) {
         for (let col = 0; col < FORMATION_COLS; col++) {
             const type = getAlienType(row);
-            aliens.push(createAlien(col, row, type));
+            const alien = createAlien(col, row, type);
+            alien.fireScale = fireScale;
+            aliens.push(alien);
         }
     }
 
@@ -93,8 +99,8 @@ export function createFormation(wave) {
         offsetX: 0,
         direction: 1,
         speed: FORMATION_BASE_SPEED + wave * FORMATION_SPEED_INCREMENT,
-        diveChance: BASE_DIVE_CHANCE + wave * DIVE_CHANCE_INCREMENT,
-        maxDivers: MAX_DIVERS_BASE + Math.floor(wave / 2),
+        diveChance: (BASE_DIVE_CHANCE + wave * DIVE_CHANCE_INCREMENT) * fireScale,
+        maxDivers: wave <= 2 ? 1 : MAX_DIVERS_BASE + Math.floor(wave / 2),
         animTimer: 0,
         enterTimer: 0,
         entered: false

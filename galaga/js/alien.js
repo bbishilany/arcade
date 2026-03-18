@@ -68,6 +68,9 @@ function generateDivePath(startX, startY, midX, targetX) {
 export function updateAlien(alien, bullets, playerX) {
     if (!alien.alive) return;
 
+    // Fire rate scales with wave: wave 1 = 10%, wave 5 = 50%, wave 10 = 100%
+    const fireScale = alien.fireScale || 1;
+
     if (alien.diving && alien.divePath) {
         if (alien.diveIndex < alien.divePath.length) {
             const pt = alien.divePath[alien.diveIndex];
@@ -76,7 +79,7 @@ export function updateAlien(alien, bullets, playerX) {
             alien.diveIndex++;
 
             // Fire while diving
-            if (Math.random() < ALIEN_FIRE_CHANCE) {
+            if (Math.random() < ALIEN_FIRE_CHANCE * fireScale) {
                 bullets.push(createAlienBullet(alien.x, alien.y + alien.height / 2));
             }
         } else {
@@ -90,7 +93,7 @@ export function updateAlien(alien, bullets, playerX) {
         alien.y = alien.formY;
 
         // Shoot from formation (low chance per frame)
-        if (Math.random() < ALIEN_FIRE_CHANCE * 0.15) {
+        if (Math.random() < ALIEN_FIRE_CHANCE * 0.15 * fireScale) {
             bullets.push(createAlienBullet(alien.x, alien.y + alien.height / 2));
         }
     }
