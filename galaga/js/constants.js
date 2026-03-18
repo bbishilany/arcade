@@ -26,9 +26,9 @@ export const ALIEN_SPACING_X = 36;
 export const ALIEN_SPACING_Y = 32;
 export const FORMATION_TOP = 60;
 export const FORMATION_LEFT = 48;
-export const FORMATION_BASE_SPEED = 0.4;
-export const FORMATION_SPEED_INCREMENT = 0.1;
-export const FORMATION_SWEEP_RANGE = 30;
+export const FORMATION_BASE_SPEED = 0.2;
+export const FORMATION_SPEED_INCREMENT = 0.05;
+export const FORMATION_SWEEP_RANGE = 15;
 
 // Alien types
 export const ALIEN_TYPES = {
