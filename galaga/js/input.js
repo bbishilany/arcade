@@ -1,9 +1,12 @@
 const keys = {};
 const justPressed = {};
 
-// Secret cheat code: type "123" for 10x bullet speed
+// Secret cheat codes
+// "123" = 10x bullet speed
+// "67"  = free movement (up/down/left/right)
 let cheatBuffer = '';
 let cheatActive = false;
+let freeMovementActive = false;
 
 // Touch state
 const activeTouches = {};
@@ -26,6 +29,10 @@ export function initInput() {
             if (cheatBuffer.length > 3) cheatBuffer = cheatBuffer.slice(-3);
             if (cheatBuffer === '123') {
                 cheatActive = !cheatActive;
+                cheatBuffer = '';
+            }
+            if (cheatBuffer.endsWith('67')) {
+                freeMovementActive = !freeMovementActive;
                 cheatBuffer = '';
             }
         }
@@ -103,4 +110,8 @@ export function clearPressed() {
 
 export function isCheatActive() {
     return cheatActive;
+}
+
+export function isFreeMovementActive() {
+    return freeMovementActive;
 }

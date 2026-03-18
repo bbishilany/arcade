@@ -1,6 +1,6 @@
 import { GAME_WIDTH, GAME_HEIGHT, PLAYER_SPEED, PLAYER_WIDTH, PLAYER_HEIGHT,
          PLAYER_Y_OFFSET, FIRE_COOLDOWN, MAX_PLAYER_BULLETS, MAX_LIVES } from './constants.js';
-import { isHeld } from './input.js';
+import { isHeld, isFreeMovementActive } from './input.js';
 import { drawSprite, PLAYER_SPRITE } from './sprites.js';
 import { createPlayerBullet } from './bullet.js';
 
@@ -27,6 +27,20 @@ export function updatePlayer(player, bullets) {
     }
     if (isHeld('ArrowRight') || isHeld('KeyD')) {
         player.x += PLAYER_SPEED;
+    }
+
+    // Free movement cheat (67) — up and down
+    if (isFreeMovementActive()) {
+        if (isHeld('ArrowUp') || isHeld('KeyW')) {
+            player.y -= PLAYER_SPEED;
+        }
+        if (isHeld('ArrowDown') || isHeld('KeyS')) {
+            player.y += PLAYER_SPEED;
+        }
+        // Clamp vertical
+        const halfH = player.height / 2;
+        if (player.y < halfH) player.y = halfH;
+        if (player.y > GAME_HEIGHT - halfH) player.y = GAME_HEIGHT - halfH;
     }
 
     // Clamp to screen
