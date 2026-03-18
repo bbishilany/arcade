@@ -97,6 +97,7 @@ function startGame() {
 
 function nextWave() {
     wave++;
+    player.lives++;  // bonus life for clearing a wave
     bullets = [];
     clearParticles();
     formation = createFormation(wave);
