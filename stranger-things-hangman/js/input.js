@@ -1,6 +1,9 @@
+import { GAME_WIDTH, GAME_HEIGHT } from './constants.js';
+
 const keys = {};
 const justPressed = {};
 let pendingLetter = null;
+let canvasTap = null; // {x, y} in game coordinates
 
 export function initInput() {
     window.addEventListener('keydown', (e) => {
@@ -38,14 +41,31 @@ export function initInput() {
         });
     }
 
-    // Canvas tap = Enter for menus
+    // Canvas tap/click — track position for menu hit detection
     const canvas = document.getElementById('gameCanvas');
-    canvas.addEventListener('touchstart', (e) => {
-        e.preventDefault();
+
+    function handleCanvasTap(clientX, clientY) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = GAME_WIDTH / rect.width;
+        const scaleY = GAME_HEIGHT / rect.height;
+        canvasTap = {
+            x: (clientX - rect.left) * scaleX,
+            y: (clientY - rect.top) * scaleY
+        };
         justPressed['Enter'] = true;
         keys['Enter'] = true;
         setTimeout(() => { keys['Enter'] = false; }, 50);
+    }
+
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        const t = e.touches[0];
+        handleCanvasTap(t.clientX, t.clientY);
     }, { passive: false });
+
+    canvas.addEventListener('click', (e) => {
+        handleCanvasTap(e.clientX, e.clientY);
+    });
 }
 
 export function isPressed(code) {
@@ -65,6 +85,15 @@ export function consumeLetterPress() {
         const letter = pendingLetter;
         pendingLetter = null;
         return letter;
+    }
+    return null;
+}
+
+export function consumeCanvasTap() {
+    if (canvasTap) {
+        const tap = canvasTap;
+        canvasTap = null;
+        return tap;
     }
     return null;
 }

@@ -1,6 +1,6 @@
 import { GAME_WIDTH, GAME_HEIGHT, STATES, DIFFICULTIES, COLORS, CORRECT_BASE, WORD_COMPLETE_BONUS, PERFECT_BONUS, SPEED_BONUS_MULT, SPEED_BONUS_WINDOW, STREAK_INCREMENT, WIN_DURATION, LOSE_DURATION, GAME_OVER_DURATION } from './constants.js';
 import { getRandomWord, getUniqueLetters } from './words.js';
-import { initInput, isPressed, clearPressed, consumeLetterPress } from './input.js';
+import { initInput, isPressed, clearPressed, consumeLetterPress, consumeCanvasTap } from './input.js';
 import { drawDemogorgon } from './demogorgon.js';
 import { initLights, drawLights, updateLights } from './lights.js';
 import { drawTitleScreen, drawDifficultySelect, drawWinScreen, drawGameOverScreen } from './screens.js';
@@ -167,25 +167,26 @@ export function update() {
             }
             break;
 
-        case STATES.DIFFICULTY_SELECT:
-            if (isPressed('Digit1') || isPressed('Numpad1')) {
-                difficulty = DIFFICULTIES.EASY;
-                playDifficultySelect();
-                playStartGame();
-                score = 0;
-                streak = 0;
-                wordsCompleted = 0;
-                startNewRound();
-            } else if (isPressed('Digit2') || isPressed('Numpad2')) {
-                difficulty = DIFFICULTIES.MEDIUM;
-                playDifficultySelect();
-                playStartGame();
-                score = 0;
-                streak = 0;
-                wordsCompleted = 0;
-                startNewRound();
-            } else if (isPressed('Digit3') || isPressed('Numpad3')) {
-                difficulty = DIFFICULTIES.HARD;
+        case STATES.DIFFICULTY_SELECT: {
+            let picked = null;
+
+            // Keyboard
+            if (isPressed('Digit1') || isPressed('Numpad1')) picked = DIFFICULTIES.EASY;
+            else if (isPressed('Digit2') || isPressed('Numpad2')) picked = DIFFICULTIES.MEDIUM;
+            else if (isPressed('Digit3') || isPressed('Numpad3')) picked = DIFFICULTIES.HARD;
+
+            // Tap/click on difficulty boxes
+            if (!picked) {
+                const tap = consumeCanvasTap();
+                if (tap && tap.x >= 100 && tap.x <= 380) {
+                    if (tap.y >= 255 && tap.y <= 325) picked = DIFFICULTIES.EASY;
+                    else if (tap.y >= 355 && tap.y <= 425) picked = DIFFICULTIES.MEDIUM;
+                    else if (tap.y >= 455 && tap.y <= 525) picked = DIFFICULTIES.HARD;
+                }
+            }
+
+            if (picked) {
+                difficulty = picked;
                 playDifficultySelect();
                 playStartGame();
                 score = 0;
@@ -196,6 +197,7 @@ export function update() {
                 changeState(STATES.TITLE);
             }
             break;
+        }
 
         case STATES.PLAYING: {
             const letter = consumeLetterPress();
