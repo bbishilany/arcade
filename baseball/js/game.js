@@ -635,7 +635,16 @@ function updateLobby() {
 
 function updateAtBat() {
     const released = updateWindup(pitcher);
-    if (released) handlePitchRelease();
+    if (released) {
+        handlePitchRelease();
+        // Schedule CPU swing when player is pitching in solo mode
+        if (!playerIsBatting() && !isMultiplayer && currentBall) {
+            cpuSwingScheduled = true;
+            const difficulty = 0.3 + Math.random() * 0.4;
+            const offset = cpuBatterSwingOffset(difficulty);
+            cpuSwingFrame = currentBall.totalFrames + offset;
+        }
+    }
     updateRelease(pitcher);
     updateSwing(batter);
 
@@ -712,18 +721,6 @@ function updateAtBat() {
 
             if (isPitchPressed() && !currentBall && !pitcher.isWindingUp) {
                 throwPitch(pitcher.selectedPitch);
-            }
-
-            if (pitcher.isWindingUp) {
-                const released = updateWindup(pitcher);
-                if (released) {
-                    handlePitchRelease();
-                    // Schedule CPU swing
-                    cpuSwingScheduled = true;
-                    const difficulty = 0.3 + Math.random() * 0.4;
-                    const offset = cpuBatterSwingOffset(difficulty);
-                    cpuSwingFrame = currentBall.totalFrames + offset;
-                }
             }
 
             // CPU batter swing
