@@ -163,6 +163,7 @@ export function update() {
     switch (state) {
         case STATES.TITLE:
             if (isPressed('Enter') || isPressed('Space')) {
+                consumeCanvasTap(); // discard stale tap so it doesn't auto-pick a difficulty
                 changeState(STATES.DIFFICULTY_SELECT);
             }
             break;
