@@ -78,6 +78,9 @@ export const WAVE_INTRO_DURATION = 120; // frames (2 seconds at 60fps)
 export const DEATH_PAUSE_DURATION = 90;
 export const GAME_OVER_DURATION = 180;
 
+// Dual Fighter
+export const DUAL_FIGHTER_GAP = 22;
+
 // Stars
 export const STAR_COUNT = 80;
 export const STAR_SPEED_MIN = 0.3;

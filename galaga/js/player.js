@@ -1,6 +1,7 @@
 import { GAME_WIDTH, GAME_HEIGHT, PLAYER_SPEED, PLAYER_WIDTH, PLAYER_HEIGHT,
-         PLAYER_Y_OFFSET, FIRE_COOLDOWN, MAX_PLAYER_BULLETS, MAX_LIVES } from './constants.js';
-import { isHeld, isFreeMovementActive, consumeMissile } from './input.js';
+         PLAYER_Y_OFFSET, FIRE_COOLDOWN, MAX_PLAYER_BULLETS, MAX_LIVES,
+         DUAL_FIGHTER_GAP } from './constants.js';
+import { isHeld, isDualFighterActive, isFreeMovementActive, consumeMissile } from './input.js';
 import { drawSprite, PLAYER_SPRITE } from './sprites.js';
 import { createPlayerBullet, createMissile } from './bullet.js';
 
@@ -20,6 +21,11 @@ export function createPlayer() {
 
 export function updatePlayer(player, bullets) {
     if (!player.alive) return;
+
+    const dual = isDualFighterActive();
+
+    // Adjust width for collision hitbox
+    player.width = dual ? PLAYER_WIDTH + DUAL_FIGHTER_GAP : PLAYER_WIDTH;
 
     // Movement
     if (isHeld('ArrowLeft') || isHeld('KeyA')) {
@@ -67,8 +73,14 @@ export function updatePlayer(player, bullets) {
     // Shoot
     if (isHeld('Space') && player.fireCooldown === 0) {
         const playerBullets = bullets.filter(b => b.isPlayer);
-        if (playerBullets.length < MAX_PLAYER_BULLETS) {
-            bullets.push(createPlayerBullet(player.x, player.y - player.height / 2));
+        const maxBullets = dual ? MAX_PLAYER_BULLETS * 2 : MAX_PLAYER_BULLETS;
+        if (playerBullets.length < maxBullets) {
+            if (dual) {
+                bullets.push(createPlayerBullet(player.x - DUAL_FIGHTER_GAP / 2, player.y - player.height / 2));
+                bullets.push(createPlayerBullet(player.x + DUAL_FIGHTER_GAP / 2, player.y - player.height / 2));
+            } else {
+                bullets.push(createPlayerBullet(player.x, player.y - player.height / 2));
+            }
             player.fireCooldown = FIRE_COOLDOWN;
             return true; // signal: played shoot sound
         }
@@ -82,12 +94,21 @@ export function drawPlayer(ctx, player, frameCount) {
     // Blink effect during invincibility
     if (player.blinkTimer > 0 && Math.floor(frameCount / 4) % 2 === 0) return;
 
-    drawSprite(ctx, PLAYER_SPRITE, player.x, player.y, 2);
-
-    // Engine glow
     const glowIntensity = 0.5 + Math.sin(frameCount * 0.3) * 0.3;
     ctx.fillStyle = `rgba(255, 102, 0, ${glowIntensity})`;
-    ctx.fillRect(player.x - 3, player.y + 10, 6, 4 + Math.random() * 3);
+
+    if (isDualFighterActive()) {
+        const offset = DUAL_FIGHTER_GAP / 2;
+        drawSprite(ctx, PLAYER_SPRITE, player.x - offset, player.y, 2);
+        drawSprite(ctx, PLAYER_SPRITE, player.x + offset, player.y, 2);
+
+        ctx.fillRect(player.x - offset - 3, player.y + 10, 6, 4 + Math.random() * 3);
+        ctx.fillRect(player.x + offset - 3, player.y + 10, 6, 4 + Math.random() * 3);
+    } else {
+        drawSprite(ctx, PLAYER_SPRITE, player.x, player.y, 2);
+
+        ctx.fillRect(player.x - 3, player.y + 10, 6, 4 + Math.random() * 3);
+    }
 }
 
 export function killPlayer(player) {

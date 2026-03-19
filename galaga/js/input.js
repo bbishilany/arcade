@@ -3,10 +3,12 @@ const justPressed = {};
 
 // Secret cheat codes
 // "123" = 10x bullet speed
+// "41"  = dual fighter jets
 // "67"  = free movement (up/down/left/right)
 // "99"  = fire a missile that destroys 10 aliens
 let cheatBuffer = '';
 let cheatActive = false;
+let dualFighterActive = false;
 let freeMovementActive = false;
 let missileReady = false;
 
@@ -28,9 +30,13 @@ export function initInput() {
         // Cheat code detection
         if (e.key >= '0' && e.key <= '9') {
             cheatBuffer += e.key;
-            if (cheatBuffer.length > 3) cheatBuffer = cheatBuffer.slice(-3);
-            if (cheatBuffer === '123') {
+            if (cheatBuffer.length > 10) cheatBuffer = cheatBuffer.slice(-10);
+            if (cheatBuffer.endsWith('123')) {
                 cheatActive = !cheatActive;
+                cheatBuffer = '';
+            }
+            if (cheatBuffer.endsWith('41')) {
+                dualFighterActive = !dualFighterActive;
                 cheatBuffer = '';
             }
             if (cheatBuffer.endsWith('67')) {
@@ -116,6 +122,10 @@ export function clearPressed() {
 
 export function isCheatActive() {
     return cheatActive;
+}
+
+export function isDualFighterActive() {
+    return dualFighterActive;
 }
 
 export function isFreeMovementActive() {

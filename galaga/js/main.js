@@ -41,15 +41,23 @@ let lastTime = 0;
 let accumulator = 0;
 let drawFrame = 0;
 
+// Reset timing after tab switch to prevent catch-up spike
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+        lastTime = 0;
+        accumulator = 0;
+    }
+});
+
 function gameLoop(timestamp) {
     if (lastTime === 0) lastTime = timestamp;
     const delta = timestamp - lastTime;
     lastTime = timestamp;
     accumulator += delta;
 
-    // Cap accumulator to prevent spiral of death
-    if (accumulator > FRAME_TIME * 5) {
-        accumulator = FRAME_TIME * 5;
+    // Cap accumulator — at most 2 catch-up frames to prevent teleporting
+    if (accumulator > FRAME_TIME * 2) {
+        accumulator = FRAME_TIME * 2;
     }
 
     while (accumulator >= FRAME_TIME) {

@@ -23,6 +23,7 @@ let score = 0;
 let highScore = 0;
 let wave = 1;
 let stateTimer = 0;
+let gameFrame = 0;
 let stars = [];
 
 // Name entry DOM elements
@@ -149,6 +150,7 @@ export function init() {
 }
 
 export function update() {
+    gameFrame++;
     stateTimer++;
     updateStars();
     updateParticles();
@@ -235,7 +237,7 @@ export function draw(ctx, drawFrame) {
 
     switch (state) {
         case STATES.TITLE:
-            drawTitleScreen(ctx, drawFrame, getLeaderboard());
+            drawTitleScreen(ctx, gameFrame, getLeaderboard());
             break;
 
         case STATES.WAVE_INTRO:
@@ -245,9 +247,9 @@ export function draw(ctx, drawFrame) {
 
         case STATES.PLAYING:
             for (const alien of formation.aliens) {
-                drawAlien(ctx, alien, drawFrame);
+                drawAlien(ctx, alien, gameFrame);
             }
-            drawPlayer(ctx, player, drawFrame);
+            drawPlayer(ctx, player, gameFrame);
             drawBullets(ctx, bullets);
             drawParticles(ctx);
             drawHUD(ctx, score, highScore, player.lives, wave);
@@ -255,7 +257,7 @@ export function draw(ctx, drawFrame) {
 
         case STATES.PLAYER_DEATH:
             for (const alien of formation.aliens) {
-                drawAlien(ctx, alien, drawFrame);
+                drawAlien(ctx, alien, gameFrame);
             }
             drawBullets(ctx, bullets);
             drawParticles(ctx);
@@ -263,7 +265,7 @@ export function draw(ctx, drawFrame) {
             break;
 
         case STATES.GAME_OVER:
-            drawGameOver(ctx, score, highScore, drawFrame);
+            drawGameOver(ctx, score, highScore, gameFrame);
             break;
 
         case STATES.NAME_ENTRY:
