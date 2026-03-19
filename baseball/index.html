@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>BASEBALL</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Name entry overlay -->
+    <div id="nameOverlay" class="name-overlay" style="display:none;">
+        <div class="name-box">
+            <div class="name-title">ENTER YOUR NAME</div>
+            <div id="nameScore" class="name-score"></div>
+            <input type="text" id="nameInput" class="name-input" maxlength="8"
+                   placeholder="YOUR NAME" autocomplete="off" autocapitalize="characters"
+                   spellcheck="false">
+            <button id="nameSubmit" class="name-submit">OK</button>
+        </div>
+    </div>
+
+    <!-- Touch controls — only visible on touchscreens -->
+    <div id="touchControls">
+        <!-- Batting controls -->
+        <div class="touch-group" id="swingControls">
+            <button class="touch-btn touch-swing" id="btnSwing" aria-label="Swing">SWING</button>
+        </div>
+        <!-- Pitching controls -->
+        <div class="touch-group" id="pitchControls">
+            <button class="touch-btn touch-pitch" id="btnPitch" aria-label="Pitch">PITCH</button>
+        </div>
+        <!-- Confirm/start -->
+        <div class="touch-group" id="confirmControls">
+            <button class="touch-btn" id="btnConfirm" aria-label="Confirm">OK</button>
+        </div>
+    </div>
+
+    <!-- PeerJS CDN for multiplayer -->
+    <script src="https://unpkg.com/peerjs@1/dist/peerjs.min.js"></script>
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
