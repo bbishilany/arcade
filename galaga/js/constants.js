@@ -70,7 +70,8 @@ export const STATES = {
     PLAYING: 'PLAYING',
     PLAYER_DEATH: 'PLAYER_DEATH',
     GAME_OVER: 'GAME_OVER',
-    NAME_ENTRY: 'NAME_ENTRY'
+    NAME_ENTRY: 'NAME_ENTRY',
+    PAUSED: 'PAUSED'
 };
 
 // Timing

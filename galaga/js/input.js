@@ -19,7 +19,7 @@ export function initInput() {
     // Keyboard
     window.addEventListener('keydown', (e) => {
         if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'Enter',
-             'KeyA', 'KeyD', 'KeyW', 'KeyS'].includes(e.code)) {
+             'KeyA', 'KeyD', 'KeyW', 'KeyS', 'Escape', 'KeyP'].includes(e.code)) {
             e.preventDefault();
         }
         if (!keys[e.code]) {
@@ -100,6 +100,15 @@ function initTouchButtons() {
     bindButton(btnLeft, 'ArrowLeft');
     bindButton(btnRight, 'ArrowRight');
     bindButton(btnFire, 'Space');
+
+    const btnPause = document.getElementById('btnPause');
+    if (btnPause) {
+        btnPause.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            justPressed['Escape'] = true;
+        }, { passive: false });
+    }
 }
 
 export function isHeld(code) {
@@ -130,6 +139,10 @@ export function isDualFighterActive() {
 
 export function isFreeMovementActive() {
     return freeMovementActive;
+}
+
+export function isPausePressed() {
+    return isPressed('Escape') || isPressed('KeyP');
 }
 
 export function consumeMissile() {

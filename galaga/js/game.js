@@ -1,7 +1,7 @@
 import { GAME_WIDTH, GAME_HEIGHT, STATES, WAVE_INTRO_DURATION,
          DEATH_PAUSE_DURATION, GAME_OVER_DURATION, COLORS,
          STAR_COUNT, STAR_SPEED_MIN, STAR_SPEED_MAX } from './constants.js';
-import { initInput, isPressed, isHeld, clearPressed } from './input.js';
+import { initInput, isPressed, isHeld, clearPressed, isPausePressed } from './input.js';
 import { createPlayer, updatePlayer, drawPlayer, killPlayer, respawnPlayer } from './player.js';
 import { updateBullets, drawBullets } from './bullet.js';
 import { drawAlien } from './alien.js';
@@ -169,6 +169,10 @@ export function update() {
             break;
 
         case STATES.PLAYING: {
+            if (isPausePressed()) {
+                changeState(STATES.PAUSED);
+                break;
+            }
             const shotFired = updatePlayer(player, bullets);
             if (shotFired) playShoot();
 
@@ -225,6 +229,12 @@ export function update() {
 
         case STATES.NAME_ENTRY:
             break;
+
+        case STATES.PAUSED:
+            if (isPausePressed()) {
+                changeState(STATES.PLAYING);
+            }
+            break;
     }
 
     clearPressed();
@@ -266,6 +276,27 @@ export function draw(ctx, drawFrame) {
 
         case STATES.GAME_OVER:
             drawGameOver(ctx, score, highScore, gameFrame);
+            break;
+
+        case STATES.PAUSED:
+            for (const alien of formation.aliens) {
+                drawAlien(ctx, alien, gameFrame);
+            }
+            drawPlayer(ctx, player, gameFrame);
+            drawBullets(ctx, bullets);
+            drawParticles(ctx);
+            drawHUD(ctx, score, highScore, player.lives, wave);
+            // Semi-transparent overlay
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+            ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '28px "Press Start 2P", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('PAUSED', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 20);
+            ctx.font = '10px "Press Start 2P", monospace';
+            ctx.fillStyle = '#00ccff';
+            ctx.fillText('Press P or ESC to resume', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 20);
+            ctx.textAlign = 'left';
             break;
 
         case STATES.NAME_ENTRY:
