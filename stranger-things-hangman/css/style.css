@@ -1,0 +1,160 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background: #0a0608;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+    font-family: 'Press Start 2P', monospace;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+canvas {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    display: block;
+}
+
+/* Touch letter grid */
+#touchControls {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0.4rem 0.5rem;
+    padding-bottom: env(safe-area-inset-bottom, 0.4rem);
+    flex-direction: column;
+    gap: 0.3rem;
+    z-index: 10;
+}
+
+.letter-row {
+    display: flex;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+.letter-btn {
+    width: 36px;
+    height: 42px;
+    border-radius: 4px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.letter-btn:active {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: #fff;
+}
+
+.letter-btn.correct {
+    background: rgba(32, 255, 64, 0.3);
+    border-color: #20ff40;
+    color: #20ff40;
+}
+
+.letter-btn.wrong {
+    background: rgba(255, 32, 32, 0.2);
+    border-color: #ff2020;
+    color: #ff2020;
+    opacity: 0.4;
+}
+
+.letter-btn.used {
+    pointer-events: none;
+    opacity: 0.3;
+}
+
+/* Name entry overlay */
+.name-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+}
+
+.name-box { text-align: center; padding: 2rem; }
+
+.name-title {
+    font-size: 1rem;
+    color: #ff2020;
+    margin-bottom: 1rem;
+}
+
+.name-score {
+    font-size: 0.8rem;
+    color: #ffff00;
+    margin-bottom: 1rem;
+}
+
+.name-input {
+    display: block;
+    margin: 0 auto 1rem;
+    width: 220px;
+    padding: 0.7rem 1rem;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 1.2rem;
+    text-align: center;
+    background: #111;
+    color: #ffff00;
+    border: 3px solid #ff2020;
+    border-radius: 4px;
+    outline: none;
+    text-transform: uppercase;
+}
+
+.name-input:focus { border-color: #ffff00; }
+
+.name-submit {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.9rem;
+    padding: 0.6rem 2rem;
+    background: #ff2020;
+    color: #000;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Mobile/touch */
+@media (pointer: coarse) {
+    body { padding-top: 0.5rem; }
+    #touchControls { display: flex; }
+    canvas {
+        max-height: calc(100vh - 160px);
+        max-height: calc(100dvh - 160px);
+    }
+}
+
+@media (pointer: coarse) and (max-width: 430px) {
+    .letter-btn {
+        width: 30px;
+        height: 36px;
+        font-size: 0.5rem;
+    }
+    #touchControls { padding: 0.3rem; }
+    canvas {
+        max-height: calc(100vh - 130px);
+        max-height: calc(100dvh - 130px);
+    }
+}
