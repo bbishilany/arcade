@@ -1,35 +1,45 @@
-// Shared online leaderboard using jsonblob.com (free, no auth)
+// Shared online leaderboard using Supabase (atomic INSERT, no race conditions)
 // Falls back to localStorage if offline
 
-const BLOB_URL = 'https://jsonblob.com/api/jsonBlob/019d0340-5818-71bd-b88d-8a7f732ed2a4';
+// ---- Supabase config (anon key is designed to be public; RLS controls access) ----
+const SUPABASE_URL = 'https://gmeuqeiqrudbtxmhshdm.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtZXVxZWlxcnVkYnR4bWhzaGRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMzM4NTEsImV4cCI6MjA4OTYwOTg1MX0.06Kb0UdNtkeeJOSaFgEAZqhdrV3cjccHtY5uwizJFD4';
+const TABLE = 'arcade_scores';
+const GAME = 'galaga';
+
 const LOCAL_KEY = 'galaga_leaderboard';
+const REST = `${SUPABASE_URL}/rest/v1/${TABLE}`;
+const HEADERS = {
+    'apikey': SUPABASE_KEY,
+    'Authorization': `Bearer ${SUPABASE_KEY}`,
+    'Content-Type': 'application/json',
+    'Prefer': 'return=minimal'
+};
 
 let cachedBoard = [];
 
-// --- Online ---
+// --- Online (Supabase) ---
 
 async function fetchOnline() {
     try {
-        const res = await fetch(BLOB_URL, {
-            headers: { 'Accept': 'application/json' }
-        });
+        const url = `${REST}?select=name,score,wave,ts,created_at&game=eq.${GAME}&order=score.desc&limit=25`;
+        const res = await fetch(url, { headers: HEADERS });
         if (!res.ok) return null;
-        const data = await res.json();
-        return Array.isArray(data) ? data : [];
+        return await res.json();
     } catch {
         return null;
     }
 }
 
-async function saveOnline(board) {
+async function insertOnline(entry) {
     try {
-        await fetch(BLOB_URL, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(board)
+        await fetch(REST, {
+            method: 'POST',
+            headers: HEADERS,
+            body: JSON.stringify({ game: GAME, ...entry })
         });
     } catch {
-        // silently fail — local backup handles it
+        // offline — local fallback handles it
     }
 }
 
@@ -45,13 +55,12 @@ function saveLocal(board) {
     localStorage.setItem(LOCAL_KEY, JSON.stringify(board));
 }
 
-// --- Public API ---
+// --- Public API (same signatures as before) ---
 
 export async function refreshLeaderboard() {
     const online = await fetchOnline();
     if (online !== null) {
-        cachedBoard = online.sort((a, b) => b.score - a.score).slice(0, 10);
-        // Sync local with online
+        cachedBoard = online;
         saveLocal(cachedBoard);
     } else {
         cachedBoard = loadLocal();
@@ -70,22 +79,16 @@ export function getHighScore() {
 export async function saveScore(name, score, wave) {
     const entry = { name, score, wave, ts: Date.now() };
 
-    // Get current online board, add entry, save back
-    let board = await fetchOnline();
-    if (board !== null) {
-        board.push(entry);
-        board.sort((a, b) => b.score - a.score);
-        if (board.length > 50) board.length = 50; // keep top 50 online
-        await saveOnline(board);
-    }
+    // Atomic INSERT — no read-modify-write race condition
+    await insertOnline(entry);
 
     // Also save locally
     const local = loadLocal();
     local.push(entry);
     local.sort((a, b) => b.score - a.score);
-    if (local.length > 10) local.length = 10;
+    if (local.length > 25) local.length = 25;
     saveLocal(local);
 
-    // Refresh cache
+    // Refresh cache from server
     await refreshLeaderboard();
 }

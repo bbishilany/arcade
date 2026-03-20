@@ -32,22 +32,25 @@ export function drawTitleScreen(ctx, drawFrame, leaderboard) {
     if (leaderboard && leaderboard.length > 0) {
         ctx.font = '9px "Press Start 2P", monospace';
         ctx.fillStyle = '#ffff00';
-        ctx.fillText('- TOP SLUGGERS -', GAME_WIDTH / 2, 330);
+        ctx.fillText('- TOP SLUGGERS -', GAME_WIDTH / 2, 325);
 
         ctx.font = '7px "Press Start 2P", monospace';
-        const top = leaderboard.slice(0, 5);
+        const top = leaderboard.slice(0, 10);
         for (let i = 0; i < top.length; i++) {
             const entry = top[i];
-            const rank = (i + 1) + '.';
+            const rank = String(i + 1).padStart(2, ' ') + '.';
             const name = entry.name.padEnd(8, ' ');
             const pts = entry.score.toString().padStart(6, '0');
+            const date = entry.created_at
+                ? new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                : '';
 
             if (i === 0) ctx.fillStyle = '#ffdd00';
             else if (i === 1) ctx.fillStyle = '#cccccc';
             else if (i === 2) ctx.fillStyle = '#cc8844';
             else ctx.fillStyle = '#888888';
 
-            ctx.fillText(`${rank} ${name} ${pts}`, GAME_WIDTH / 2, 355 + i * 18);
+            ctx.fillText(`${rank} ${name} ${pts}  ${date}`, GAME_WIDTH / 2, 345 + i * 16);
         }
     }
 

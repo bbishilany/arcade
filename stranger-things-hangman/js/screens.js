@@ -35,21 +35,25 @@ export function drawTitleScreen(ctx, drawFrame, leaderboard) {
     if (leaderboard && leaderboard.length > 0) {
         ctx.font = '8px "Press Start 2P", monospace';
         ctx.fillStyle = COLORS.TITLE_RED;
-        ctx.fillText('HIGH SCORES', GAME_WIDTH / 2, 430);
+        ctx.fillText('HIGH SCORES', GAME_WIDTH / 2, 420);
 
-        const top = leaderboard.slice(0, 5);
+        ctx.font = '7px "Press Start 2P", monospace';
+        const top = leaderboard.slice(0, 10);
         for (let i = 0; i < top.length; i++) {
             const entry = top[i];
-            const rank = (i + 1) + '.';
+            const rank = String(i + 1).padStart(2, ' ') + '.';
             const name = entry.name.padEnd(8, ' ');
             const pts = entry.score.toString().padStart(6, '0');
+            const date = entry.created_at
+                ? new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                : '';
 
             if (i === 0) ctx.fillStyle = '#ffdd00';
             else if (i === 1) ctx.fillStyle = '#cccccc';
             else if (i === 2) ctx.fillStyle = '#cc8844';
             else ctx.fillStyle = '#888888';
 
-            ctx.fillText(`${rank} ${name} ${pts}`, GAME_WIDTH / 2, 455 + i * 18);
+            ctx.fillText(`${rank} ${name} ${pts}  ${date}`, GAME_WIDTH / 2, 438 + i * 16);
         }
     }
 
