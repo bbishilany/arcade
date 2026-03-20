@@ -11,8 +11,9 @@ const isTouch = matchMedia('(pointer: coarse)').matches;
 
 function resizeCanvas() {
     const ratio = GAME_WIDTH / GAME_HEIGHT;
-    let w = window.innerWidth;
-    let h = isTouch ? window.innerHeight - 160 : window.innerHeight;
+    const vp = window.visualViewport || { width: window.innerWidth, height: window.innerHeight };
+    let w = vp.width;
+    let h = isTouch ? vp.height - 160 : vp.height;
 
     if (w / h > ratio) w = h * ratio;
     else h = w / ratio;
@@ -22,6 +23,7 @@ function resizeCanvas() {
 }
 
 window.addEventListener('resize', resizeCanvas);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
 init();
