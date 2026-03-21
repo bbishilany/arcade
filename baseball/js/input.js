@@ -5,6 +5,11 @@ let touchSwing = false;
 let touchPitch = false;
 let touchConfirm = false;
 
+// Secret cheat codes
+// "99" = fiery fastball
+let cheatBuffer = '';
+let fireballReady = false;
+
 export function initInput() {
     window.addEventListener('keydown', (e) => {
         if (['Space', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
@@ -15,6 +20,16 @@ export function initInput() {
             justPressed[e.code] = true;
         }
         keys[e.code] = true;
+
+        // Cheat code detection
+        if (e.key >= '0' && e.key <= '9') {
+            cheatBuffer += e.key;
+            if (cheatBuffer.length > 10) cheatBuffer = cheatBuffer.slice(-10);
+            if (cheatBuffer.endsWith('99')) {
+                fireballReady = true;
+                cheatBuffer = '';
+            }
+        }
     });
 
     window.addEventListener('keyup', (e) => {
@@ -101,6 +116,18 @@ export function clearPressed() {
     touchSwing = false;
     touchPitch = false;
     touchConfirm = false;
+}
+
+export function consumeFireball() {
+    if (fireballReady) {
+        fireballReady = false;
+        return true;
+    }
+    return false;
+}
+
+export function isFireballReady() {
+    return fireballReady;
 }
 
 // Show/hide specific touch button groups

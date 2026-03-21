@@ -1,21 +1,23 @@
 import { PITCHER_Y, PLATE_Y, ZONE_X, GAME_WIDTH } from './constants.js';
 
 // Ball state for batting view
-export function createPitch(pitchType) {
+export function createPitch(pitchType, isFireball = false) {
+    const frames = isFireball ? 15 : pitchType.frames; // fireball is 3x faster than a fastball
     return {
         type: pitchType,
         frame: 0,
-        totalFrames: pitchType.frames,
+        totalFrames: frames,
         startX: GAME_WIDTH / 2,
         startY: PITCHER_Y + 20,
         targetX: ZONE_X,
         targetY: PLATE_Y,
-        curve: pitchType.curve,
+        curve: isFireball ? 0 : pitchType.curve,
         x: GAME_WIDTH / 2,
         y: PITCHER_Y + 20,
         size: 3,
         active: true,
-        reachedPlate: false
+        reachedPlate: false,
+        isFireball: isFireball
     };
 }
 
@@ -47,6 +49,51 @@ export function drawPitchBall(ctx, ball) {
     if (!ball.active) return;
 
     const r = ball.size;
+
+    if (ball.isFireball) {
+        // Fiery trail behind the ball (toward pitcher)
+        const trailLen = 20 + Math.random() * 10;
+        const grad = ctx.createLinearGradient(ball.x, ball.y - r, ball.x, ball.y - r - trailLen);
+        grad.addColorStop(0, 'rgba(255, 100, 0, 0.8)');
+        grad.addColorStop(0.4, 'rgba(255, 200, 0, 0.5)');
+        grad.addColorStop(1, 'rgba(255, 50, 0, 0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(ball.x - r * 1.5, ball.y - r - trailLen, r * 3, trailLen);
+
+        // Inner flame core
+        ctx.fillStyle = 'rgba(255, 255, 100, 0.6)';
+        ctx.fillRect(ball.x - r * 0.8, ball.y - r - trailLen * 0.6, r * 1.6, trailLen * 0.5);
+
+        // Flickering embers
+        for (let i = 0; i < 4; i++) {
+            const ex = ball.x + (Math.random() - 0.5) * r * 4;
+            const ey = ball.y - r - Math.random() * trailLen;
+            const es = 1 + Math.random() * 2;
+            ctx.fillStyle = `rgba(255, ${150 + Math.random() * 105}, 0, ${0.4 + Math.random() * 0.4})`;
+            ctx.fillRect(ex - es / 2, ey - es / 2, es, es);
+        }
+
+        // Outer glow
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, r * 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 80, 0, 0.25)';
+        ctx.fill();
+
+        // Ball core — bright orange/white
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, r, 0, Math.PI * 2);
+        ctx.fillStyle = '#ff6600';
+        ctx.fill();
+
+        // Hot center
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, r * 0.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffff88';
+        ctx.fill();
+
+        return;
+    }
+
     ctx.beginPath();
     ctx.arc(ball.x, ball.y, r, 0, Math.PI * 2);
     ctx.fillStyle = '#ffffff';

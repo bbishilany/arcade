@@ -6,7 +6,8 @@ import {
     ZONE_X, ZONE_Y, ZONE_W, ZONE_H, PLATE_Y
 } from './constants.js';
 import { initInput, isPressed, isHeld, isSwingPressed, isPitchPressed,
-         isConfirmPressed, clearPressed, showTouchControls } from './input.js';
+         isConfirmPressed, clearPressed, showTouchControls,
+         consumeFireball, isFireballReady } from './input.js';
 import { createPitch, updatePitch, drawPitchBall } from './ball.js';
 import { createPitcher, cpuSelectPitch, updatePitcherCycle, startWindup,
          updateWindup, updateRelease, getCurrentPitchType, drawPitcher,
@@ -170,9 +171,12 @@ function throwPitch(pitchTypeIndex) {
     playPitchThrow();
 }
 
+let pendingFireball = false;
+
 function handlePitchRelease() {
     const pitchType = getCurrentPitchType(pitcher);
-    currentBall = createPitch(pitchType);
+    currentBall = createPitch(pitchType, pendingFireball);
+    pendingFireball = false;
 
     if (isMultiplayer && isConnected()) {
         sendMessage({
@@ -720,6 +724,7 @@ function updateAtBat() {
             }
 
             if (isPitchPressed() && !currentBall && !pitcher.isWindingUp) {
+                pendingFireball = consumeFireball();
                 throwPitch(pitcher.selectedPitch);
             }
 
@@ -930,6 +935,14 @@ function drawBattingView(ctx, drawFrame) {
                 ctx.font = '8px "Press Start 2P", monospace';
                 ctx.fillStyle = '#888888';
                 ctx.fillText('<< ARROWS >>  SPACE = THROW', GAME_WIDTH / 2, GAME_HEIGHT - 55);
+
+                // Fireball ready indicator
+                if (isFireballReady()) {
+                    ctx.font = '10px "Press Start 2P", monospace';
+                    const glow = 0.7 + Math.sin(drawFrame * 0.15) * 0.3;
+                    ctx.fillStyle = `rgba(255, 100, 0, ${glow})`;
+                    ctx.fillText('FIREBALL READY!', GAME_WIDTH / 2, GAME_HEIGHT - 75);
+                }
             } else {
                 ctx.font = '10px "Press Start 2P", monospace';
                 ctx.fillStyle = '#4488ff';
