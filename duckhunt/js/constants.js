@@ -36,25 +36,44 @@ export const STATES = {
 
 // Gameplay
 export const TOTAL_ROUNDS = 10;
-export const DUCKS_PER_ROUND = 10;
-export const SHOTS_PER_ATTEMPT = 3;
-export const DUCK_FLY_FRAMES = 300; // ~5 seconds at 60fps
+export const DUCK_FLY_FRAMES = 240; // ~4 seconds at 60fps (was 5s)
 export const PERFECT_BONUS = 10000;
 
+// Mode-specific config
+// Mode A: 2 ducks at a time, 5 attempts = 10 ducks/round, 3 shots
+// Mode B: 3 ducks at a time, 4 attempts = 12 ducks/round, 4 shots
+export const MODE_CONFIG = {
+    A: { ducksPerAttempt: 2, attempts: 5, shotsPerAttempt: 3 },
+    B: { ducksPerAttempt: 3, attempts: 4, shotsPerAttempt: 4 }
+};
+
+// Derived: total ducks per round
+export function ducksPerRound(mode) {
+    const c = MODE_CONFIG[mode];
+    return c.ducksPerAttempt * c.attempts;
+}
+
 // Minimum hits to pass each round (index 0 unused)
-export const MIN_HITS = [0, 6, 6, 6, 6, 7, 7, 8, 8, 9, 9];
+// Mode A: out of 10 ducks
+export const MIN_HITS_A = [0, 6, 6, 6, 6, 7, 7, 8, 8, 9, 9];
+// Mode B: out of 12 ducks
+export const MIN_HITS_B = [0, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11];
+
+export function minHits(mode, round) {
+    return mode === 'A' ? MIN_HITS_A[round] : MIN_HITS_B[round];
+}
 
 // Points per duck hit per round (index 0 unused)
 export const POINTS = [0, 500, 500, 800, 800, 1000, 1000, 1500, 1500, 2000, 2000];
 
-// Duck speed per round
+// Duck speed per round — faster base + steeper ramp
 export function duckSpeed(round) {
-    return 2.0 + round * 0.2;
+    return 2.5 + round * 0.3;
 }
 
-// Direction change interval range (frames)
-export const DIR_CHANGE_MIN = 90;
-export const DIR_CHANGE_MAX = 150;
+// Direction change interval range (frames) — tighter turns
+export const DIR_CHANGE_MIN = 60;
+export const DIR_CHANGE_MAX = 110;
 
 // Animation timing
 export const DUCK_HIT_FLASH = 12;    // white flash frames

@@ -92,7 +92,7 @@ export function drawModeSelect(ctx, selectedMode, frame) {
     ctx.fillText(`${aPrefix}GAME A`, GAME_WIDTH / 2, 280);
     ctx.fillStyle = selectedMode === 'A' ? '#ffffff' : '#666666';
     ctx.font = '9px "Press Start 2P", monospace';
-    ctx.fillText('1 DUCK', GAME_WIDTH / 2, 305);
+    ctx.fillText('2 DUCKS', GAME_WIDTH / 2, 305);
 
     // Game B
     const bColor = selectedMode === 'B' ? '#ffff00' : '#888888';
@@ -102,7 +102,7 @@ export function drawModeSelect(ctx, selectedMode, frame) {
     ctx.fillText(`${bPrefix}GAME B`, GAME_WIDTH / 2, 370);
     ctx.fillStyle = selectedMode === 'B' ? '#ffffff' : '#666666';
     ctx.font = '9px "Press Start 2P", monospace';
-    ctx.fillText('2 DUCKS', GAME_WIDTH / 2, 395);
+    ctx.fillText('3 DUCKS', GAME_WIDTH / 2, 395);
 
     // Instructions
     const blink = Math.floor(frame / 30) % 2;

@@ -4,8 +4,8 @@ import {
     GAME_WIDTH, GAME_HEIGHT, STATES,
     SKY_COLOR, GRASS_COLOR_1, GRASS_COLOR_2, TREE_COLOR,
     GRASS_TOP, SKY_HEIGHT, HUD_TOP, TREE_TOP,
-    TOTAL_ROUNDS, DUCKS_PER_ROUND, SHOTS_PER_ATTEMPT,
-    POINTS, MIN_HITS, PERFECT_BONUS,
+    TOTAL_ROUNDS, MODE_CONFIG, ducksPerRound, minHits,
+    POINTS, PERFECT_BONUS, DUCK_FLY_FRAMES,
     ROUND_INTRO_FRAMES, ROUND_END_FRAMES, GAME_OVER_FRAMES,
     DUCK_SCALE
 } from './constants.js';
@@ -24,19 +24,20 @@ import {
 
 // --- Game state ---
 let state = STATES.TITLE;
-let gameMode = 'A';          // A = 1 duck, B = 2 ducks
+let gameMode = 'A';          // A = 2 ducks, B = 3 ducks
 let selectedMode = 'A';      // for mode select screen
 let round = 1;
 let score = 0;
-let shotsLeft = SHOTS_PER_ATTEMPT;
+let shotsLeft = 3;
 let ducks = [];               // active duck entities
 let duckResults = [];          // 'hit' or 'miss' for each duck this round
-let currentDuckIndex = 0;     // which duck attempt we're on
+let currentDuckIndex = 0;     // total ducks resolved this round
 let timer = 0;
 let frame = 0;
 let roundHits = 0;
 let shotFired = false;
 let gameOverSoundPlayed = false;
+let totalDucksThisRound = 10;
 
 // Flash effect on shot
 let flashTimer = 0;
@@ -75,6 +76,7 @@ function startNewGame() {
     currentDuckIndex = 0;
     roundHits = 0;
     gameOverSoundPlayed = false;
+    totalDucksThisRound = ducksPerRound(gameMode);
     resetDog();
     startDogIntroState(false);
 }
@@ -91,17 +93,18 @@ function startRound() {
     duckResults = [];
     currentDuckIndex = 0;
     roundHits = 0;
+    totalDucksThisRound = ducksPerRound(gameMode);
     playRoundStart();
 }
 
 function spawnDucks() {
     state = STATES.FLYING;
     ducks = [];
-    shotsLeft = SHOTS_PER_ATTEMPT;
+    const cfg = MODE_CONFIG[gameMode];
+    shotsLeft = cfg.shotsPerAttempt;
     shotFired = false;
 
-    const count = gameMode === 'A' ? 1 : 2;
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < cfg.ducksPerAttempt; i++) {
         ducks.push(createDuck(round));
     }
 }
@@ -227,15 +230,14 @@ function updateFlying() {
 
     // Check if all ducks resolved
     const allDone = ducks.every(d => d.state === 'gone' || d.state === 'escaped');
-    const anyHit = ducks.some(d => d.state === 'hit' || d.state === 'falling' || d.state === 'gone');
     const anyStillFlying = ducks.some(d => d.state === 'flying');
     const anyAnimating = ducks.some(d => d.state === 'hit' || d.state === 'falling');
 
     // Out of ammo — force ducks to start escaping via flyTimer
     if (shotsLeft <= 0 && anyStillFlying && !anyAnimating) {
         for (const duck of ducks) {
-            if (duck.state === 'flying' && duck.flyTimer < 300) {
-                duck.flyTimer = 300; // triggers natural escape sequence
+            if (duck.state === 'flying' && duck.flyTimer < DUCK_FLY_FRAMES) {
+                duck.flyTimer = DUCK_FLY_FRAMES; // triggers natural escape sequence
             }
         }
     }
@@ -245,25 +247,15 @@ function updateFlying() {
         const hitsThisAttempt = ducks.filter(d => d.state === 'gone').length;
         const ducksThisAttempt = ducks.length;
 
-        // Record results
-        if (gameMode === 'A') {
-            duckResults.push(hitsThisAttempt > 0 ? 'hit' : 'miss');
-            if (hitsThisAttempt > 0) {
+        // Record each duck individually
+        for (let i = 0; i < ducksThisAttempt; i++) {
+            const wasHit = ducks[i].state === 'gone';
+            duckResults.push(wasHit ? 'hit' : 'miss');
+            if (wasHit) {
                 score += POINTS[round];
                 roundHits++;
             }
             currentDuckIndex++;
-        } else {
-            // Mode B: 2 ducks per attempt
-            for (let i = 0; i < ducksThisAttempt; i++) {
-                const wasHit = ducks[i].state === 'gone';
-                duckResults.push(wasHit ? 'hit' : 'miss');
-                if (wasHit) {
-                    score += POINTS[round];
-                    roundHits++;
-                }
-                currentDuckIndex++;
-            }
         }
 
         // Play quack for escaped ducks
@@ -294,7 +286,7 @@ function updateDogResult() {
 
     if (isDogDone() || timer > 120) {
         // More ducks this round?
-        if (currentDuckIndex < DUCKS_PER_ROUND) {
+        if (currentDuckIndex < totalDucksThisRound) {
             spawnDucks();
         } else {
             // Round end
@@ -302,7 +294,7 @@ function updateDogResult() {
             timer = ROUND_END_FRAMES;
 
             // Perfect round bonus
-            if (roundHits === DUCKS_PER_ROUND) {
+            if (roundHits === totalDucksThisRound) {
                 score += PERFECT_BONUS;
                 playPerfect();
             }
@@ -314,7 +306,7 @@ function updateRoundEnd() {
     timer--;
     if (timer <= 0) {
         // Check if passed
-        if (roundHits >= MIN_HITS[round]) {
+        if (roundHits >= minHits(gameMode, round)) {
             // Next round
             round++;
             if (round > TOTAL_ROUNDS) {
@@ -434,7 +426,8 @@ function hudState() {
         score,
         shotsLeft,
         duckResults,
-        currentDuckIndex
+        currentDuckIndex,
+        totalDucks: totalDucksThisRound
     };
 }
 
@@ -482,9 +475,10 @@ function drawRoundEndOverlay(ctx, drawFrame) {
     ctx.fillText(`ROUND ${round}`, GAME_WIDTH / 2, 160);
 
     ctx.font = '10px "Press Start 2P", monospace';
-    ctx.fillText(`${roundHits} / ${DUCKS_PER_ROUND} DUCKS`, GAME_WIDTH / 2, 200);
+    ctx.fillText(`${roundHits} / ${totalDucksThisRound} DUCKS`, GAME_WIDTH / 2, 200);
 
-    const passed = roundHits >= MIN_HITS[round];
+    const needed = minHits(gameMode, round);
+    const passed = roundHits >= needed;
     if (passed) {
         ctx.fillStyle = '#00ff00';
         ctx.fillText('CLEAR!', GAME_WIDTH / 2, 240);
@@ -493,10 +487,10 @@ function drawRoundEndOverlay(ctx, drawFrame) {
         ctx.fillText('FAILED', GAME_WIDTH / 2, 240);
         ctx.fillStyle = '#888888';
         ctx.font = '8px "Press Start 2P", monospace';
-        ctx.fillText(`NEEDED ${MIN_HITS[round]}`, GAME_WIDTH / 2, 265);
+        ctx.fillText(`NEEDED ${needed}`, GAME_WIDTH / 2, 265);
     }
 
-    if (roundHits === DUCKS_PER_ROUND) {
+    if (roundHits === totalDucksThisRound) {
         const blink = Math.floor(drawFrame / 15) % 2;
         if (blink) {
             ctx.fillStyle = '#ffff00';

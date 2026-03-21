@@ -2,13 +2,13 @@
 // Shows: round number, score, ammo bullets, duck hit/miss indicators
 
 import {
-    GAME_WIDTH, GAME_HEIGHT, HUD_TOP, HUD_BG, HUD_TEXT,
-    SHOTS_PER_ATTEMPT, DUCKS_PER_ROUND
+    GAME_WIDTH, GAME_HEIGHT, HUD_TOP, HUD_BG, HUD_TEXT
 } from './constants.js';
 import { drawSprite, BULLET } from './sprites.js';
 
 export function drawHUD(ctx, state) {
-    const { round, score, shotsLeft, duckResults, currentDuckIndex } = state;
+    const { round, score, shotsLeft, duckResults, currentDuckIndex, totalDucks } = state;
+    const maxShots = state.shotsLeft + (state.duckResults.length > 0 ? 0 : 0); // just use shotsLeft for display
 
     // Black HUD background
     ctx.fillStyle = HUD_BG;
@@ -18,7 +18,6 @@ export function drawHUD(ctx, state) {
     ctx.fillStyle = '#444444';
     ctx.fillRect(0, HUD_TOP, GAME_WIDTH, 2);
 
-    const hudMid = HUD_TOP + (GAME_HEIGHT - HUD_TOP) / 2;
     const textY = HUD_TOP + 18;
 
     // --- Round indicator (top-left) ---
@@ -33,12 +32,11 @@ export function drawHUD(ctx, state) {
 
     // --- Ammo bullets (middle-left) ---
     const bulletY = HUD_TOP + 30;
-    for (let i = 0; i < SHOTS_PER_ATTEMPT; i++) {
+    const maxBullets = Math.max(shotsLeft, 4); // show up to 4 slots
+    for (let i = 0; i < maxBullets; i++) {
         if (i < shotsLeft) {
-            // Active bullet
             drawSprite(ctx, BULLET, 18 + i * 16, bulletY + 10, 2);
         } else {
-            // Empty slot
             ctx.fillStyle = '#333333';
             ctx.fillRect(12 + i * 16, bulletY + 2, 8, 16);
         }
@@ -51,18 +49,20 @@ export function drawHUD(ctx, state) {
 
     // --- Duck indicators (bottom row, centered) ---
     const indicatorY = HUD_TOP + 48;
-    const indicatorW = 10;
+    const duckCount = totalDucks || 10;
+    // Scale indicator size to fit — smaller for 12 ducks
+    const indicatorW = duckCount > 10 ? 8 : 10;
     const indicatorGap = 2;
-    const totalW = DUCKS_PER_ROUND * (indicatorW + indicatorGap) - indicatorGap;
+    const totalW = duckCount * (indicatorW + indicatorGap) - indicatorGap;
     const startX = (GAME_WIDTH - totalW) / 2;
 
-    for (let i = 0; i < DUCKS_PER_ROUND; i++) {
+    for (let i = 0; i < duckCount; i++) {
         const ix = startX + i * (indicatorW + indicatorGap);
         let color;
         if (i < duckResults.length) {
             color = duckResults[i] === 'hit' ? '#ff4444' : '#ffffff';
-        } else if (i === currentDuckIndex) {
-            color = '#ffff00'; // current duck
+        } else if (i >= currentDuckIndex && i < currentDuckIndex + 3) {
+            color = '#ffff00'; // current batch
         } else {
             color = '#333333'; // pending
         }
