@@ -29,9 +29,10 @@ let forkPos = new Vec2(); // top of slingshot — the actual launch anchor
 let pullStart = null;
 let pullCurrent = null;
 let isPulling = false;
-const MAX_PULL = 100;
-const LAUNCH_POWER = 8;
+const MAX_PULL = 140;
+const LAUNCH_POWER = 18;
 const FORK_OFFSET = 55; // fork is this many px above slingshot base
+let flameTrail = []; // flame particles behind the bird
 
 // ── Level loading ───────────────────────────────────────────
 function loadLevel(idx) {
@@ -48,6 +49,7 @@ function loadLevel(idx) {
     pigs = [];
     blocks = [];
     trajectoryDots = [];
+    flameTrail = [];
     settleTimer = 0;
     levelCompleteTimer = 0;
 
@@ -305,13 +307,13 @@ function computeTrajectory(startPos, startVel, steps) {
     let px = startPos.x, py = startPos.y;
     let vx = startVel.x, vy = startVel.y;
     const dt = 1 / 60;
-    for (let i = 0; i < steps; i++) {
-        vx *= 0.98;
-        vy += 800 * dt;
-        vy *= 0.98;
+    for (let i = 0; i < steps * 3; i++) {
+        vy += 600 * dt;
+        vx *= 0.998;
+        vy *= 0.998;
         px += vx * dt;
         py += vy * dt;
-        if (i % 2 === 0) dots.push(new Vec2(px, py));
+        if (i % 3 === 0) dots.push(new Vec2(px, py));
         if (py > renderer.groundY) break;
     }
     return dots;
@@ -424,6 +426,43 @@ function gameLoop(timestamp) {
         particles.update(dt);
         checkDestructions();
 
+        // Flame trail behind the bird while in flight
+        if (currentBird && !currentBird.destroyed && currentBird.userData.launched) {
+            const speed = currentBird.vel.len();
+            if (speed > 50) {
+                const dir = currentBird.vel.norm().mul(-1);
+                const intensity = Math.min(speed / 300, 1);
+                const count = Math.ceil(intensity * 4);
+                for (let i = 0; i < count; i++) {
+                    const spread = (Math.random() - 0.5) * 12;
+                    const perpX = -dir.y * spread;
+                    const perpY = dir.x * spread;
+                    const colors = ['#ff2200', '#ff6600', '#ff9900', '#ffcc00', '#fff200'];
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    flameTrail.push({
+                        x: currentBird.pos.x + dir.x * currentBird.radius + perpX,
+                        y: currentBird.pos.y + dir.y * currentBird.radius + perpY,
+                        vx: dir.x * (80 + Math.random() * 60) + (Math.random() - 0.5) * 40,
+                        vy: dir.y * (80 + Math.random() * 60) + (Math.random() - 0.5) * 40 - 30,
+                        size: 3 + Math.random() * (6 * intensity),
+                        life: 0.6 + Math.random() * 0.4,
+                        decay: 0.03 + Math.random() * 0.02,
+                        color,
+                    });
+                }
+            }
+        }
+
+        // Update flame trail
+        for (const f of flameTrail) {
+            f.x += f.vx * dt;
+            f.y += f.vy * dt;
+            f.vy += 100 * dt;
+            f.size *= 0.97;
+            f.life -= f.decay;
+        }
+        flameTrail = flameTrail.filter(f => f.life > 0 && f.size > 0.5);
+
         // Check if bird has stopped or gone off screen
         if (state === 'flying' && currentBird) {
             const b = currentBird;
@@ -508,6 +547,20 @@ function gameLoop(timestamp) {
         if (trajectoryDots.length > 0) {
             renderer.drawTrajectory(trajectoryDots);
         }
+
+        // Flame trail
+        const ctx = renderer.ctx;
+        for (const f of flameTrail) {
+            ctx.globalAlpha = f.life * 0.9;
+            ctx.shadowColor = f.color;
+            ctx.shadowBlur = f.size * 3;
+            ctx.fillStyle = f.color;
+            ctx.beginPath();
+            ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
 
         // Particles
         for (const p of particles.particles) {

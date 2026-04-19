@@ -1,10 +1,10 @@
 // Simple 2D physics engine for Angry Birds
 // Handles rigid body simulation, collision detection & response
 
-export const GRAVITY = 800;
-const DAMPING = 0.98;
+export const GRAVITY = 600;
+const DAMPING = 0.998;
 const BOUNCE_THRESHOLD = 20;
-const COLLISION_ITERATIONS = 8;
+const COLLISION_ITERATIONS = 4;
 const POSITION_CORRECTION = 0.4;
 const SLOP = 0.5;
 
@@ -65,18 +65,24 @@ export class Body {
         this.acc = this.acc.add(f.mul(this.invMass));
     }
 
-    update(dt) {
+    // Sub-step integration — no damping here (applied once per frame in world)
+    integrate(dt) {
         if (this.isStatic || this.destroyed) return;
 
         this.vel = this.vel.add(this.acc.mul(dt));
         this.vel = this.vel.add(new Vec2(0, GRAVITY * dt));
-        this.vel = this.vel.mul(DAMPING);
         this.pos = this.pos.add(this.vel.mul(dt));
 
-        this.angVel *= DAMPING;
         this.angle += this.angVel * dt;
 
         this.acc = new Vec2();
+    }
+
+    // Apply damping once per frame
+    applyDamping() {
+        if (this.isStatic || this.destroyed) return;
+        this.vel = this.vel.mul(DAMPING);
+        this.angVel *= DAMPING;
     }
 
     getAABB() {
@@ -136,10 +142,15 @@ export class PhysicsWorld {
         const subDt = dt / COLLISION_ITERATIONS;
         for (let i = 0; i < COLLISION_ITERATIONS; i++) {
             for (const b of this.bodies) {
-                b.update(subDt);
+                b.integrate(subDt);
             }
             this.resolveGroundCollisions();
             this.resolveBodyCollisions();
+        }
+
+        // Damping once per frame — not per sub-step
+        for (const b of this.bodies) {
+            b.applyDamping();
         }
 
         // Remove destroyed bodies
