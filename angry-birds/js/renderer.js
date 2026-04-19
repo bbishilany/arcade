@@ -296,6 +296,9 @@ export class Renderer {
         } else if (material === 'ice') {
             color = healthPct > 0.5 ? '#80c0e0' : '#60a0c0';
             borderColor = '#4080a0';
+        } else if (material === 'steel') {
+            color = healthPct > 0.5 ? '#556070' : '#404855';
+            borderColor = '#2a3040';
         } else {
             color = '#a06820';
             borderColor = '#604010';
@@ -325,7 +328,7 @@ export class Renderer {
             ctx.globalAlpha = 1;
         }
 
-        // Wood grain lines
+        // Material texture
         if (material === 'wood' && body.width > body.height) {
             ctx.strokeStyle = borderColor;
             ctx.lineWidth = 0.5;
@@ -336,6 +339,47 @@ export class Renderer {
                 ctx.lineTo(hw - 2, i);
                 ctx.stroke();
             }
+            ctx.globalAlpha = 1;
+        } else if (material === 'steel') {
+            // Rivets on steel
+            ctx.fillStyle = '#3a4555';
+            ctx.globalAlpha = 0.6;
+            const rivetSpacing = 18;
+            for (let rx = -hw + 6; rx < hw; rx += rivetSpacing) {
+                for (let ry = -hh + 6; ry < hh; ry += rivetSpacing) {
+                    ctx.beginPath();
+                    ctx.arc(rx, ry, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            // Highlight edge
+            ctx.strokeStyle = '#6a7a8a';
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = 0.3;
+            ctx.beginPath();
+            ctx.moveTo(-hw + 1, -hh + 1);
+            ctx.lineTo(hw - 1, -hh + 1);
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+        } else if (material === 'stone') {
+            // Stone texture — mortar lines
+            ctx.strokeStyle = borderColor;
+            ctx.lineWidth = 0.5;
+            ctx.globalAlpha = 0.25;
+            if (body.height > body.width) {
+                for (let i = -hh + 15; i < hh; i += 15) {
+                    ctx.beginPath();
+                    ctx.moveTo(-hw + 1, i);
+                    ctx.lineTo(hw - 1, i);
+                    ctx.stroke();
+                }
+            }
+            ctx.globalAlpha = 1;
+        } else if (material === 'ice') {
+            // Ice shine
+            ctx.fillStyle = '#c0e8ff';
+            ctx.globalAlpha = 0.25;
+            ctx.fillRect(-hw + 2, -hh + 2, hw * 0.6, hh * 0.3);
             ctx.globalAlpha = 1;
         }
 

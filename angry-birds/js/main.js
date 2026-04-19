@@ -61,7 +61,7 @@ function loadLevel(idx) {
     birdsQueue = [...level.birds];
     currentBird = null;
 
-    // Pigs
+    // Pigs — start asleep so they don't move until hit
     for (const p of level.pigs) {
         const pig = world.add(new Body(p.x, groundY + p.y, {
             type: 'circle',
@@ -71,16 +71,18 @@ function loadLevel(idx) {
             friction: 0.6,
             hp: 80,
             tag: 'pig',
+            asleep: true,
         }));
         pigs.push(pig);
     }
 
-    // Blocks
+    // Blocks — start asleep, only wake on bird impact
     for (const b of level.blocks) {
         const materialProps = {
-            wood: { hp: 80, mass: 2, restitution: 0.2 },
-            stone: { hp: 200, mass: 5, restitution: 0.1 },
-            ice: { hp: 40, mass: 1, restitution: 0.3 },
+            wood:  { hp: 120, mass: 3, restitution: 0.2 },
+            stone: { hp: 300, mass: 8, restitution: 0.1 },
+            ice:   { hp: 50,  mass: 1.5, restitution: 0.3 },
+            steel: { hp: 500, mass: 12, restitution: 0.05 },
         };
         const mp = materialProps[b.material] || materialProps.wood;
         const block = world.add(new Body(b.x, groundY + b.y, {
@@ -93,6 +95,7 @@ function loadLevel(idx) {
             hp: mp.hp,
             tag: 'block',
             userData: { material: b.material },
+            asleep: true,
         }));
         blocks.push(block);
     }

@@ -1,5 +1,5 @@
-// Simple 2D physics engine for Angry Birds
-// Handles rigid body simulation, collision detection & response
+// 2D physics engine for Angry Birds
+// Sleep system: blocks/pigs stay frozen until disturbed by a bird impact
 
 export const GRAVITY = 600;
 const DAMPING = 0.998;
@@ -7,6 +7,8 @@ const BOUNCE_THRESHOLD = 20;
 const COLLISION_ITERATIONS = 4;
 const POSITION_CORRECTION = 0.4;
 const SLOP = 0.5;
+const WAKE_RADIUS = 150; // how far from impact point bodies wake up
+const WAKE_IMPULSE = 30;  // min impulse to wake nearby bodies
 
 export class Vec2 {
     constructor(x = 0, y = 0) {
@@ -42,7 +44,7 @@ export class Body {
         this.restitution = opts.restitution ?? 0.3;
         this.friction = opts.friction ?? 0.5;
         this.isStatic = opts.isStatic || false;
-        this.type = opts.type || 'circle'; // 'circle' or 'rect'
+        this.type = opts.type || 'circle';
         this.radius = opts.radius || 15;
         this.width = opts.width || 30;
         this.height = opts.height || 30;
@@ -51,6 +53,9 @@ export class Body {
         this.tag = opts.tag || '';
         this.destroyed = false;
         this.userData = opts.userData || {};
+
+        // Sleep system — bodies start asleep and don't move until disturbed
+        this.asleep = opts.asleep ?? false;
 
         // Moment of inertia
         if (this.type === 'circle') {
@@ -61,26 +66,26 @@ export class Body {
         this.invInertia = this.inertia > 0 ? 1 / this.inertia : 0;
     }
 
+    wake() {
+        this.asleep = false;
+    }
+
     applyForce(f) {
         this.acc = this.acc.add(f.mul(this.invMass));
     }
 
-    // Sub-step integration — no damping here (applied once per frame in world)
     integrate(dt) {
-        if (this.isStatic || this.destroyed) return;
+        if (this.isStatic || this.destroyed || this.asleep) return;
 
         this.vel = this.vel.add(this.acc.mul(dt));
         this.vel = this.vel.add(new Vec2(0, GRAVITY * dt));
         this.pos = this.pos.add(this.vel.mul(dt));
-
         this.angle += this.angVel * dt;
-
         this.acc = new Vec2();
     }
 
-    // Apply damping once per frame
     applyDamping() {
-        if (this.isStatic || this.destroyed) return;
+        if (this.isStatic || this.destroyed || this.asleep) return;
         this.vel = this.vel.mul(DAMPING);
         this.angVel *= DAMPING;
     }
@@ -92,7 +97,6 @@ export class Body {
                 max: new Vec2(this.pos.x + this.radius, this.pos.y + this.radius)
             };
         }
-        // For rotated rectangles, compute the bounding box
         const hw = this.width / 2, hh = this.height / 2;
         const corners = [
             new Vec2(-hw, -hh), new Vec2(hw, -hh),
@@ -118,7 +122,7 @@ export class Body {
     }
 
     isSleeping() {
-        return !this.isStatic && this.vel.len() < 3 && Math.abs(this.angVel) < 0.05;
+        return !this.isStatic && !this.asleep && this.vel.len() < 3 && Math.abs(this.angVel) < 0.05;
     }
 }
 
@@ -138,6 +142,25 @@ export class PhysicsWorld {
         if (idx >= 0) this.bodies.splice(idx, 1);
     }
 
+    // Wake all bodies within radius of a point
+    wakeNear(pos, radius) {
+        for (const b of this.bodies) {
+            if (b.asleep && !b.isStatic) {
+                const dist = b.pos.sub(pos).len();
+                if (dist < radius) {
+                    b.wake();
+                }
+            }
+        }
+    }
+
+    // Wake everything — used when bird hits something
+    wakeAll() {
+        for (const b of this.bodies) {
+            if (b.asleep) b.wake();
+        }
+    }
+
     update(dt) {
         const subDt = dt / COLLISION_ITERATIONS;
         for (let i = 0; i < COLLISION_ITERATIONS; i++) {
@@ -148,18 +171,16 @@ export class PhysicsWorld {
             this.resolveBodyCollisions();
         }
 
-        // Damping once per frame — not per sub-step
         for (const b of this.bodies) {
             b.applyDamping();
         }
 
-        // Remove destroyed bodies
         this.bodies = this.bodies.filter(b => !b.destroyed);
     }
 
     resolveGroundCollisions() {
         for (const b of this.bodies) {
-            if (b.isStatic || b.destroyed) continue;
+            if (b.isStatic || b.destroyed || b.asleep) continue;
 
             if (b.type === 'circle') {
                 const bottom = b.pos.y + b.radius;
@@ -174,7 +195,6 @@ export class PhysicsWorld {
                     b.angVel *= 0.95;
                 }
             } else {
-                // Rect ground collision (simplified — use AABB bottom)
                 const aabb = b.getAABB();
                 if (aabb.max.y > this.groundY) {
                     const penetration = aabb.max.y - this.groundY;
@@ -189,7 +209,6 @@ export class PhysicsWorld {
                 }
             }
 
-            // Wall boundaries
             if (b.pos.x < b.radius) {
                 b.pos.x = b.radius;
                 b.vel.x *= -b.restitution;
@@ -203,10 +222,27 @@ export class PhysicsWorld {
                 const a = this.bodies[i];
                 const b = this.bodies[j];
                 if (a.destroyed || b.destroyed) continue;
+
+                // Skip collision between two sleeping bodies
+                if (a.asleep && b.asleep) continue;
+                // Skip collision between sleeping body and non-bird awake body
+                // (only birds wake up structures)
                 if (a.isStatic && b.isStatic) continue;
+
+                // If one is asleep, only collide if the other is a bird
+                if (a.asleep && b.tag !== 'bird') continue;
+                if (b.asleep && a.tag !== 'bird') continue;
 
                 const collision = this.detectCollision(a, b);
                 if (collision) {
+                    // Wake bodies on bird collision
+                    if (a.tag === 'bird' || b.tag === 'bird') {
+                        const impactPoint = a.tag === 'bird' ? a.pos : b.pos;
+                        if (a.asleep) a.wake();
+                        if (b.asleep) b.wake();
+                        // Wake nearby bodies — cascading destruction
+                        this.wakeNear(impactPoint, WAKE_RADIUS);
+                    }
                     this.resolveCollision(a, b, collision);
                 }
             }
@@ -238,26 +274,20 @@ export class PhysicsWorld {
     }
 
     circleVsRect(circle, rect) {
-        // Transform circle center to rect's local space
         const local = circle.pos.sub(rect.pos).rotate(-rect.angle);
         const hw = rect.width / 2, hh = rect.height / 2;
-
-        // Clamp to rect bounds
         const closest = new Vec2(
             Math.max(-hw, Math.min(hw, local.x)),
             Math.max(-hh, Math.min(hh, local.y))
         );
-
         const diff = local.sub(closest);
         const dist = diff.len();
-
         if (dist >= circle.radius) return null;
 
         let normal;
         if (dist > 0.001) {
             normal = diff.norm().rotate(rect.angle);
         } else {
-            // Circle center is inside rect
             const dx = hw - Math.abs(local.x);
             const dy = hh - Math.abs(local.y);
             if (dx < dy) {
@@ -266,24 +296,18 @@ export class PhysicsWorld {
                 normal = new Vec2(0, local.y > 0 ? 1 : -1).rotate(rect.angle);
             }
         }
-
         return { normal, depth: circle.radius - dist };
     }
 
     rectVsRect(a, b) {
-        // SAT for OBBs (simplified — use AABB overlap)
         const aabb1 = a.getAABB();
         const aabb2 = b.getAABB();
-
         const overlapX = Math.min(aabb1.max.x, aabb2.max.x) - Math.max(aabb1.min.x, aabb2.min.x);
         const overlapY = Math.min(aabb1.max.y, aabb2.max.y) - Math.max(aabb1.min.y, aabb2.min.y);
-
         if (overlapX <= 0 || overlapY <= 0) return null;
 
         const diff = b.pos.sub(a.pos);
-        let normal;
-        let depth;
-
+        let normal, depth;
         if (overlapX < overlapY) {
             depth = overlapX;
             normal = new Vec2(diff.x > 0 ? 1 : -1, 0);
@@ -291,14 +315,12 @@ export class PhysicsWorld {
             depth = overlapY;
             normal = new Vec2(0, diff.y > 0 ? 1 : -1);
         }
-
         return { normal, depth };
     }
 
     resolveCollision(a, b, collision) {
         const { normal, depth } = collision;
 
-        // Position correction
         const totalInvMass = a.invMass + b.invMass;
         if (totalInvMass === 0) return;
 
@@ -306,17 +328,13 @@ export class PhysicsWorld {
         a.pos = a.pos.sub(normal.mul(correction * a.invMass));
         b.pos = b.pos.add(normal.mul(correction * b.invMass));
 
-        // Relative velocity
         const relVel = b.vel.sub(a.vel);
         const velAlongNormal = relVel.dot(normal);
-
-        // Don't resolve if separating
         if (velAlongNormal > 0) return;
 
         const e = Math.min(a.restitution, b.restitution);
         let j = -(1 + e) * velAlongNormal / totalInvMass;
 
-        // Birds are wrecking balls — amplify impulse on the target
         const birdHitting = (a.tag === 'bird' || b.tag === 'bird');
         if (birdHitting) j *= 2.5;
 
@@ -324,7 +342,7 @@ export class PhysicsWorld {
         a.vel = a.vel.sub(impulse.mul(a.invMass));
         b.vel = b.vel.add(impulse.mul(b.invMass));
 
-        // Friction impulse
+        // Friction
         const tangent = relVel.sub(normal.mul(velAlongNormal));
         const tanLen = tangent.len();
         if (tanLen > 0.001) {
@@ -343,26 +361,33 @@ export class PhysicsWorld {
         a.angVel += (Math.random() - 0.5) * contactSpeed * 0.01 * a.invInertia;
         b.angVel += (Math.random() - 0.5) * contactSpeed * 0.01 * b.invInertia;
 
-        // Damage on impact
+        // Damage
         const impactForce = Math.abs(velAlongNormal);
         if (impactForce > 20) {
             const dmg = impactForce * 2.5;
             if (a.tag === 'bird') {
-                b.damage(dmg * 3); // bird wrecks everything
-                // Bird barely slows down — plow through
+                b.damage(dmg * 3);
                 a.vel = a.vel.mul(0.92);
+                // Wake everything nearby — the bird is a wrecking ball
+                this.wakeNear(a.pos, WAKE_RADIUS * 2);
             }
             if (b.tag === 'bird') {
                 a.damage(dmg * 3);
                 b.vel = b.vel.mul(0.92);
+                this.wakeNear(b.pos, WAKE_RADIUS * 2);
             }
             if (a.tag === 'block' && b.tag === 'block') {
                 a.damage(dmg * 0.5);
                 b.damage(dmg * 0.5);
             }
-            // Debris chain reactions — blocks hit pigs hard
             if (a.tag === 'block' && b.tag === 'pig') b.damage(dmg * 2);
             if (b.tag === 'block' && a.tag === 'pig') a.damage(dmg * 2);
+
+            // Wake nearby bodies from debris impacts too
+            if (impactForce > WAKE_IMPULSE) {
+                const mid = a.pos.add(b.pos).mul(0.5);
+                this.wakeNear(mid, WAKE_RADIUS);
+            }
         }
     }
 }
