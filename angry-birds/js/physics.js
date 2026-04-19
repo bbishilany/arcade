@@ -314,7 +314,11 @@ export class PhysicsWorld {
         if (velAlongNormal > 0) return;
 
         const e = Math.min(a.restitution, b.restitution);
-        const j = -(1 + e) * velAlongNormal / totalInvMass;
+        let j = -(1 + e) * velAlongNormal / totalInvMass;
+
+        // Birds are wrecking balls — amplify impulse on the target
+        const birdHitting = (a.tag === 'bird' || b.tag === 'bird');
+        if (birdHitting) j *= 2.5;
 
         const impulse = normal.mul(j);
         a.vel = a.vel.sub(impulse.mul(a.invMass));
@@ -341,14 +345,24 @@ export class PhysicsWorld {
 
         // Damage on impact
         const impactForce = Math.abs(velAlongNormal);
-        if (impactForce > 80) {
-            const dmg = impactForce * 0.5;
-            if (a.tag === 'bird' || a.tag === 'debris') b.damage(dmg);
-            if (b.tag === 'bird' || b.tag === 'debris') a.damage(dmg);
-            if (a.tag === 'block' && b.tag === 'block') {
-                a.damage(dmg * 0.3);
-                b.damage(dmg * 0.3);
+        if (impactForce > 20) {
+            const dmg = impactForce * 2.5;
+            if (a.tag === 'bird') {
+                b.damage(dmg * 3); // bird wrecks everything
+                // Bird barely slows down — plow through
+                a.vel = a.vel.mul(0.92);
             }
+            if (b.tag === 'bird') {
+                a.damage(dmg * 3);
+                b.vel = b.vel.mul(0.92);
+            }
+            if (a.tag === 'block' && b.tag === 'block') {
+                a.damage(dmg * 0.5);
+                b.damage(dmg * 0.5);
+            }
+            // Debris chain reactions — blocks hit pigs hard
+            if (a.tag === 'block' && b.tag === 'pig') b.damage(dmg * 2);
+            if (b.tag === 'block' && a.tag === 'pig') a.damage(dmg * 2);
         }
     }
 }

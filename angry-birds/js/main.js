@@ -29,10 +29,11 @@ let forkPos = new Vec2(); // top of slingshot — the actual launch anchor
 let pullStart = null;
 let pullCurrent = null;
 let isPulling = false;
-const MAX_PULL = 140;
-const LAUNCH_POWER = 18;
+const MAX_PULL = 160;
+const LAUNCH_POWER = 28;
 const FORK_OFFSET = 55; // fork is this many px above slingshot base
 let flameTrail = []; // flame particles behind the bird
+let screenShake = { x: 0, y: 0, intensity: 0 };
 
 // ── Level loading ───────────────────────────────────────────
 function loadLevel(idx) {
@@ -108,11 +109,11 @@ function loadNextBird() {
     const type = birdsQueue.shift();
     currentBird = world.add(new Body(slingshotPos.x, slingshotPos.y - 55, {
         type: 'circle',
-        radius: type === 'black' ? 20 : (type === 'blue' ? 12 : 16),
-        mass: type === 'black' ? 6 : (type === 'blue' ? 1.5 : 3),
-        restitution: 0.3,
-        friction: 0.5,
-        hp: 9999,
+        radius: type === 'black' ? 24 : (type === 'blue' ? 14 : 20),
+        mass: 80, // thousand-pound wrecking ball
+        restitution: 0.4,
+        friction: 0.2,
+        hp: 99999,
         tag: 'bird',
         userData: { birdType: type, launched: false, ability: false },
         isStatic: true,
@@ -232,9 +233,10 @@ function activateBirdAbility() {
     currentBird.userData.ability = true;
 
     if (type === 'yellow') {
-        // Speed boost
+        // AFTERBURNER — insane speed boost
         const dir = currentBird.vel.norm();
-        currentBird.vel = dir.mul(currentBird.vel.len() * 2.5);
+        currentBird.vel = dir.mul(currentBird.vel.len() * 4);
+        screenShake.intensity = 10;
         SFX.launch();
     } else if (type === 'blue') {
         // Split into 3
@@ -262,8 +264,8 @@ function activateBirdAbility() {
     } else if (type === 'black') {
         // Explode — damage everything nearby
         const pos = currentBird.pos;
-        const BLAST_RADIUS = 120;
-        const BLAST_FORCE = 500;
+        const BLAST_RADIUS = 250;
+        const BLAST_FORCE = 1500;
 
         for (const body of world.bodies) {
             if (body === currentBird || body.isStatic) continue;
@@ -272,13 +274,14 @@ function activateBirdAbility() {
             if (dist < BLAST_RADIUS && dist > 0) {
                 const force = diff.norm().mul(BLAST_FORCE * (1 - dist / BLAST_RADIUS));
                 body.vel = body.vel.add(force);
-                body.damage(150 * (1 - dist / BLAST_RADIUS));
+                body.damage(500 * (1 - dist / BLAST_RADIUS));
             }
         }
 
-        particles.emit(pos.x, pos.y, 30, '#ff6600', { speed: 250, size: 6, decay: 0.02 });
-        particles.emit(pos.x, pos.y, 20, '#ff0', { speed: 200, size: 4, decay: 0.025 });
-        particles.emit(pos.x, pos.y, 15, '#fff', { speed: 180, size: 3, decay: 0.03 });
+        particles.emit(pos.x, pos.y, 50, '#ff6600', { speed: 400, size: 8, decay: 0.015 });
+        particles.emit(pos.x, pos.y, 35, '#ff0', { speed: 350, size: 6, decay: 0.02 });
+        particles.emit(pos.x, pos.y, 25, '#fff', { speed: 300, size: 5, decay: 0.025 });
+        screenShake.intensity = 25;
 
         SFX.destroy();
         currentBird.destroyed = true;
@@ -426,42 +429,102 @@ function gameLoop(timestamp) {
         particles.update(dt);
         checkDestructions();
 
-        // Flame trail behind the bird while in flight
+        // Massive flame trail behind the bird while in flight
         if (currentBird && !currentBird.destroyed && currentBird.userData.launched) {
             const speed = currentBird.vel.len();
-            if (speed > 50) {
+            if (speed > 30) {
                 const dir = currentBird.vel.norm().mul(-1);
-                const intensity = Math.min(speed / 300, 1);
-                const count = Math.ceil(intensity * 4);
+                const intensity = Math.min(speed / 200, 1);
+                const count = Math.ceil(intensity * 12); // way more particles
                 for (let i = 0; i < count; i++) {
-                    const spread = (Math.random() - 0.5) * 12;
+                    const spread = (Math.random() - 0.5) * 24 * intensity;
                     const perpX = -dir.y * spread;
                     const perpY = dir.x * spread;
-                    const colors = ['#ff2200', '#ff6600', '#ff9900', '#ffcc00', '#fff200'];
+                    // Inner core = white/yellow, outer = orange/red
+                    const coreColors = ['#ffffff', '#fff8e0', '#ffee44', '#ffcc00'];
+                    const outerColors = ['#ff6600', '#ff4400', '#ff2200', '#ee0000', '#cc0000'];
+                    const isCore = Math.random() < 0.3;
+                    const colors = isCore ? coreColors : outerColors;
                     const color = colors[Math.floor(Math.random() * colors.length)];
+                    const baseSize = isCore ? 2 : 4;
                     flameTrail.push({
-                        x: currentBird.pos.x + dir.x * currentBird.radius + perpX,
-                        y: currentBird.pos.y + dir.y * currentBird.radius + perpY,
-                        vx: dir.x * (80 + Math.random() * 60) + (Math.random() - 0.5) * 40,
-                        vy: dir.y * (80 + Math.random() * 60) + (Math.random() - 0.5) * 40 - 30,
-                        size: 3 + Math.random() * (6 * intensity),
-                        life: 0.6 + Math.random() * 0.4,
-                        decay: 0.03 + Math.random() * 0.02,
+                        x: currentBird.pos.x + dir.x * currentBird.radius * 0.8 + perpX,
+                        y: currentBird.pos.y + dir.y * currentBird.radius * 0.8 + perpY,
+                        vx: dir.x * (120 + Math.random() * 100) + (Math.random() - 0.5) * 60,
+                        vy: dir.y * (120 + Math.random() * 100) + (Math.random() - 0.5) * 60 - 40,
+                        size: baseSize + Math.random() * (10 * intensity),
+                        life: 0.5 + Math.random() * 0.5,
+                        decay: 0.02 + Math.random() * 0.015,
                         color,
+                        isCore,
+                    });
+                }
+                // Smoke trail
+                if (Math.random() < 0.4) {
+                    flameTrail.push({
+                        x: currentBird.pos.x + dir.x * currentBird.radius * 1.5,
+                        y: currentBird.pos.y + dir.y * currentBird.radius * 1.5,
+                        vx: dir.x * 40 + (Math.random() - 0.5) * 30,
+                        vy: dir.y * 40 - 50 - Math.random() * 30,
+                        size: 8 + Math.random() * 12,
+                        life: 0.8 + Math.random() * 0.4,
+                        decay: 0.012,
+                        color: '#333',
+                        isSmoke: true,
                     });
                 }
             }
+
+            // Screen shake on impact detection — check if bird speed dropped suddenly
+            if (!currentBird._lastSpeed) currentBird._lastSpeed = speed;
+            const speedDrop = currentBird._lastSpeed - speed;
+            if (speedDrop > 100) {
+                screenShake.intensity = Math.min(speedDrop * 0.06, 20);
+                // Burst of sparks at impact
+                for (let i = 0; i < 20; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const spd = 100 + Math.random() * 200;
+                    flameTrail.push({
+                        x: currentBird.pos.x,
+                        y: currentBird.pos.y,
+                        vx: Math.cos(angle) * spd,
+                        vy: Math.sin(angle) * spd,
+                        size: 2 + Math.random() * 4,
+                        life: 0.3 + Math.random() * 0.3,
+                        decay: 0.04,
+                        color: ['#fff', '#ff0', '#ff6600'][Math.floor(Math.random() * 3)],
+                    });
+                }
+            }
+            currentBird._lastSpeed = speed;
         }
 
         // Update flame trail
         for (const f of flameTrail) {
             f.x += f.vx * dt;
             f.y += f.vy * dt;
-            f.vy += 100 * dt;
-            f.size *= 0.97;
+            if (f.isSmoke) {
+                f.vy -= 60 * dt; // smoke rises
+                f.size *= 1.01; // smoke expands
+            } else {
+                f.vy += 80 * dt;
+            }
+            f.size *= f.isSmoke ? 0.995 : 0.96;
             f.life -= f.decay;
         }
-        flameTrail = flameTrail.filter(f => f.life > 0 && f.size > 0.5);
+        flameTrail = flameTrail.filter(f => f.life > 0 && f.size > 0.3);
+
+        // Decay screen shake
+        if (screenShake.intensity > 0) {
+            screenShake.x = (Math.random() - 0.5) * screenShake.intensity * 2;
+            screenShake.y = (Math.random() - 0.5) * screenShake.intensity * 2;
+            screenShake.intensity *= 0.85;
+            if (screenShake.intensity < 0.5) {
+                screenShake.intensity = 0;
+                screenShake.x = 0;
+                screenShake.y = 0;
+            }
+        }
 
         // Check if bird has stopped or gone off screen
         if (state === 'flying' && currentBird) {
@@ -512,6 +575,13 @@ function gameLoop(timestamp) {
     if (state === 'title') {
         renderer.drawTitleScreen();
     } else {
+        // Screen shake
+        const ctx = renderer.ctx;
+        if (screenShake.intensity > 0) {
+            ctx.save();
+            ctx.translate(screenShake.x, screenShake.y);
+        }
+
         // Draw slingshot back
         renderer.drawSlingshot(slingshotPos.x, slingshotPos.y);
 
@@ -548,12 +618,22 @@ function gameLoop(timestamp) {
             renderer.drawTrajectory(trajectoryDots);
         }
 
-        // Flame trail
-        const ctx = renderer.ctx;
+        // Flame trail — smoke layer first (behind)
         for (const f of flameTrail) {
+            if (!f.isSmoke) continue;
+            ctx.globalAlpha = f.life * 0.3;
+            ctx.fillStyle = f.color;
+            ctx.beginPath();
+            ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Flame trail — fire layer
+        for (const f of flameTrail) {
+            if (f.isSmoke) continue;
             ctx.globalAlpha = f.life * 0.9;
-            ctx.shadowColor = f.color;
-            ctx.shadowBlur = f.size * 3;
+            ctx.shadowColor = f.isCore ? '#fff' : f.color;
+            ctx.shadowBlur = f.isCore ? f.size * 6 : f.size * 4;
             ctx.fillStyle = f.color;
             ctx.beginPath();
             ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
@@ -565,6 +645,11 @@ function gameLoop(timestamp) {
         // Particles
         for (const p of particles.particles) {
             renderer.drawParticle(p);
+        }
+
+        // End screen shake
+        if (screenShake.intensity > 0) {
+            ctx.restore();
         }
 
         // HUD
