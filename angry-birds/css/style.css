@@ -1,0 +1,76 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background: #000;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    font-family: 'Press Start 2P', monospace;
+}
+
+canvas {
+    display: block;
+    cursor: crosshair;
+    image-rendering: auto;
+}
+
+.name-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.name-box {
+    background: #111;
+    border: 2px solid #ff0;
+    padding: 2rem;
+    text-align: center;
+}
+
+.name-title {
+    font-family: 'Press Start 2P', monospace;
+    color: #ff0;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+.name-score {
+    font-family: 'Press Start 2P', monospace;
+    color: #fff;
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.name-input {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.8rem;
+    padding: 0.5rem;
+    background: #000;
+    color: #fff;
+    border: 1px solid #555;
+    text-align: center;
+    text-transform: uppercase;
+    width: 200px;
+    display: block;
+    margin: 0 auto 1rem;
+}
+
+.name-submit {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.7rem;
+    padding: 0.5rem 1.5rem;
+    background: #ff0;
+    color: #000;
+    border: none;
+    cursor: pointer;
+}
+
+.name-submit:hover {
+    background: #fc0;
+}
