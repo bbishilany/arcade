@@ -25,11 +25,13 @@ let levelCompleteTimer = 0;
 // Slingshot position
 const SLING = { x: 180, y: 0 }; // y set relative to ground
 let slingshotPos = new Vec2();
+let forkPos = new Vec2(); // top of slingshot — the actual launch anchor
 let pullStart = null;
 let pullCurrent = null;
 let isPulling = false;
 const MAX_PULL = 100;
 const LAUNCH_POWER = 8;
+const FORK_OFFSET = 55; // fork is this many px above slingshot base
 
 // ── Level loading ───────────────────────────────────────────
 function loadLevel(idx) {
@@ -50,6 +52,7 @@ function loadLevel(idx) {
     levelCompleteTimer = 0;
 
     slingshotPos = new Vec2(SLING.x, groundY - 10);
+    forkPos = new Vec2(slingshotPos.x, slingshotPos.y - FORK_OFFSET);
 
     // Birds
     birdsQueue = [...level.birds];
@@ -178,18 +181,18 @@ function onMove(e) {
     if (state !== 'aiming' || !isPulling) return;
     pullCurrent = getPos(e);
 
-    // Clamp pull distance
-    const diff = pullCurrent.sub(slingshotPos);
+    // Clamp pull distance relative to fork (launch anchor)
+    const diff = pullCurrent.sub(forkPos);
     const dist = diff.len();
     if (dist > MAX_PULL) {
-        pullCurrent = slingshotPos.add(diff.norm().mul(MAX_PULL));
+        pullCurrent = forkPos.add(diff.norm().mul(MAX_PULL));
     }
 
     // Position bird at pull point
     currentBird.pos = pullCurrent.clone();
 
-    // Calculate trajectory preview
-    const launchVel = slingshotPos.sub(pullCurrent).mul(LAUNCH_POWER);
+    // Calculate trajectory preview — launch from fork
+    const launchVel = forkPos.sub(pullCurrent).mul(LAUNCH_POWER);
     trajectoryDots = computeTrajectory(pullCurrent, launchVel, 25);
 
     SFX.stretch();
@@ -202,12 +205,12 @@ function onUp(e) {
     isPulling = false;
     trajectoryDots = [];
 
-    const diff = slingshotPos.sub(currentBird.pos);
+    const diff = forkPos.sub(currentBird.pos);
     const dist = diff.len();
 
     if (dist < 10) {
-        // Didn't pull far enough — snap back
-        currentBird.pos = new Vec2(slingshotPos.x, slingshotPos.y - 55);
+        // Didn't pull far enough — snap back to fork
+        currentBird.pos = forkPos.clone();
         state = 'playing';
         return;
     }
